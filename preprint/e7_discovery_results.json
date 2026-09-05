@@ -1,0 +1,211 @@
+{
+  "probe": "E7_discovery",
+  "generated_at": "2026-09-05T19:26:57.539803+00:00",
+  "rediscovery": [
+    {
+      "endpoint": "bbb",
+      "note": "lead: low TPSA/HBD penetrate the CNS",
+      "meta_r2": 0.296,
+      "tree_feature": "TPSA",
+      "tree_rule": "if TPSA <= 0.6210 then 0.8626 else 0.2778",
+      "top_corr_feature": "TPSA",
+      "top_corr": -0.483,
+      "driver_hit": true,
+      "n_surprises": 0
+    },
+    {
+      "endpoint": "solubility",
+      "note": "high logP -> low aqueous solubility",
+      "meta_r2": 0.49,
+      "tree_feature": "MolLogP",
+      "tree_rule": "if MolLogP <= 0.2242 then -1.7492 else -5.0526",
+      "top_corr_feature": "MolLogP",
+      "top_corr": -0.74,
+      "driver_hit": true,
+      "n_surprises": 104
+    },
+    {
+      "endpoint": "hia",
+      "note": "low TPSA -> good intestinal absorption",
+      "meta_r2": 0.369,
+      "tree_feature": "TPSA",
+      "tree_rule": "if TPSA <= 0.8941 then 0.9363 else 0.2500",
+      "top_corr_feature": "TPSA",
+      "top_corr": -0.333,
+      "driver_hit": true,
+      "n_surprises": 78
+    },
+    {
+      "endpoint": "caco2",
+      "note": "low TPSA -> high permeability",
+      "meta_r2": 0.547,
+      "tree_feature": "HBD",
+      "tree_rule": "if HBD <= 0.0284 then -4.8644 else -5.8153",
+      "top_corr_feature": "HBD",
+      "top_corr": -0.653,
+      "driver_hit": true,
+      "n_surprises": 18
+    },
+    {
+      "endpoint": "lipophilicity",
+      "note": "semi-circular reference (driver is calc logP)",
+      "meta_r2": 0.255,
+      "tree_feature": "MolLogP",
+      "tree_rule": "if MolLogP <= -0.6120 then 1.3773 else 2.4681",
+      "top_corr_feature": "MolLogP",
+      "top_corr": 0.394,
+      "driver_hit": true,
+      "n_surprises": 74
+    }
+  ],
+  "cliffs": [
+    {
+      "endpoint": "lipophilicity",
+      "n_molecules": 4200,
+      "n_cliffs": 152,
+      "top_sali": 32.86,
+      "examples": [
+        {
+          "sim": 0.901,
+          "dY": 3.24,
+          "smiles_a": "Cc1cn([C@H]2CCCN(S(=O)(=O)c3ccc(C(=O)O)c(Oc4cccc(Cl)c4)c3)C2)c(=O)[nH]c1=O",
+          "smiles_b": "Cc1cn([C@H]2CCCN(S(=O)(=O)c3ccc(C(N)=O)c(Oc4cccc(Cl)c4)c3)C2)c(=O)[nH]c1=O",
+          "y_a": -1.28,
+          "y_b": 1.96
+        },
+        {
+          "sim": 0.875,
+          "dY": 3.59,
+          "smiles_a": "COC(=O)CCn1cc(-c2cc(NC3CC3)n3ncc(C#N)c3n2)c2cc(NC(C)=O)ccc21",
+          "smiles_b": "CC(=O)Nc1ccc2c(c1)c(-c1cc(NC3CC3)n3ncc(C#N)c3n1)cn2CCC(=O)O",
+          "y_a": 2.72,
+          "y_b": -0.87
+        },
+        {
+          "sim": 0.877,
+          "dY": 3.2,
+          "smiles_a": "CCNC(=O)c1cc2c(-n3ccc(C(F)(F)F)n3)c(-c3cncc(C(=O)O)c3)cnc2[nH]1",
+          "smiles_b": "CCNC(=O)c1cc2c(-n3ccc(C(F)(F)F)n3)c(-c3cncc(C(=O)NC)c3)cnc2[nH]1",
+          "y_a": -0.99,
+          "y_b": 2.21
+        },
+        {
+          "sim": 0.859,
+          "dY": 3.58,
+          "smiles_a": "CC(=O)Nc1ccc2c(c1)c(-c1cc(NC3CC3)n3ncc(C#N)c3n1)cn2CCO",
+          "smiles_b": "CC(=O)Nc1ccc2c(c1)c(-c1cc(NC3CC3)n3ncc(C#N)c3n1)cn2CCC(=O)O",
+          "y_a": 2.71,
+          "y_b": -0.87
+        },
+        {
+          "sim": 0.831,
+          "dY": 4.01,
+          "smiles_a": "Cc1cn([C@H]2CCCN(S(=O)(=O)c3ccc(C(=O)O)c(Oc4cccc(Cl)c4)c3)C2)c(=O)[nH]c1=O",
+          "smiles_b": "COc1ccc(S(=O)(=O)N2CCC[C@H](n3cc(C)c(=O)[nH]c3=O)C2)cc1Oc1cccc(Cl)c1",
+          "y_a": -1.28,
+          "y_b": 2.73
+        },
+        {
+          "sim": 0.877,
+          "dY": 2.8,
+          "smiles_a": "CCNC(=O)c1cc2c(-n3ccc(C(F)(F)F)n3)c(-c3cncc(C(=O)O)c3)cnc2[nH]1",
+          "smiles_b": "CCNC(=O)c1cc2c(-n3ccc(C(F)(F)F)n3)c(-c3cncc(C(N)=O)c3)cnc2[nH]1",
+          "y_a": -0.99,
+          "y_b": 1.81
+        },
+        {
+          "sim": 0.822,
+          "dY": 3.97,
+          "smiles_a": "Cc1cn([C@H]2CCCN(S(=O)(=O)c3ccc(C(=O)O)c(Oc4cccc(Cl)c4)c3)C2)c(=O)[nH]c1=O",
+          "smiles_b": "Cc1cn([C@H]2CCCN(S(=O)(=O)c3ccc(CO)c(Oc4cccc(Cl)c4)c3)C2)c(=O)[nH]c1=O",
+          "y_a": -1.28,
+          "y_b": 2.69
+        },
+        {
+          "sim": 0.833,
+          "dY": 3.62,
+          "smiles_a": "CCCCOc1nc(N)c2[nH]c(=O)n(Cc3cccc(CC(=O)OC)c3)c2n1",
+          "smiles_b": "CCCCOc1nc(N)c2[nH]c(=O)n(Cc3cccc(CC(=O)O)c3)c2n1",
+          "y_a": 3.76,
+          "y_b": 0.14
+        }
+      ]
+    },
+    {
+      "endpoint": "solubility",
+      "n_molecules": 9982,
+      "n_cliffs": 1246,
+      "top_sali": 157.07,
+      "examples": [
+        {
+          "sim": 0.963,
+          "dY": 5.818,
+          "smiles_a": "CCCCCCCCCCOC(=O)c1ccccc1C(=O)OCCCCCCCCCC",
+          "smiles_b": "CCCCCOC(=O)c1ccccc1C(=O)OCCCCC",
+          "y_a": -9.308,
+          "y_b": -3.49
+        },
+        {
+          "sim": 0.957,
+          "dY": 6.304,
+          "smiles_a": "O=C([O-])c1ccccc1-c1c2cc(Br)c(=O)c(Br)c-2oc2c(Br)c([O-])c(Br)cc12.O=C([O-])c1ccccc1-c1c2cc(Br)c(=O)c(Br)c-2oc2c(Br)c([O-])c(Br)cc12.O=C([O-])c1ccccc1-c1c2cc(Br)c(=O)c(Br)c-2oc2c(Br)c([O-])c(Br)cc12.[Al+3].[Al+3]",
+          "smiles_b": "O=C([O-])c1ccccc1-c1c2cc(Br)c(=O)c(Br)c-2oc2c(Br)c([O-])c(Br)cc12.[Na+].[Na+]",
+          "y_a": -7.144,
+          "y_b": -0.84
+        },
+        {
+          "sim": 0.95,
+          "dY": 7.128,
+          "smiles_a": "CCCCCCCCCCCCCCCCCC(=O)OC",
+          "smiles_b": "CCCCCC(=O)OC",
+          "y_a": -8.998,
+          "y_b": -1.87
+        },
+        {
+          "sim": 0.963,
+          "dY": 5.07,
+          "smiles_a": "CCCCCOC(=O)c1ccccc1C(=O)OCCCCC",
+          "smiles_b": "CCCCCCCOC(=O)c1ccccc1C(=O)OCCCCCCC",
+          "y_a": -3.49,
+          "y_b": -8.56
+        },
+        {
+          "sim": 0.967,
+          "dY": 4.56,
+          "smiles_a": "CCCCC/C=C/CC(CC(=O)O)C(=O)O",
+          "smiles_b": "CCCCCCCCCCCCCCC/C=C/CC(CC(=O)O)C(=O)O",
+          "y_a": -2.404,
+          "y_b": -6.964
+        },
+        {
+          "sim": 0.966,
+          "dY": 4.45,
+          "smiles_a": "CCCCCCCCCCCCOC(=O)c1ccc(N)cc1",
+          "smiles_b": "CCCCCOC(=O)c1ccc(N)cc1",
+          "y_a": -7.8,
+          "y_b": -3.35
+        },
+        {
+          "sim": 0.95,
+          "dY": 5.96,
+          "smiles_a": "CCCCCCCCCCCCCCCC(=O)OC",
+          "smiles_b": "CCCCCC(=O)OC",
+          "y_a": -7.83,
+          "y_b": -1.87
+        },
+        {
+          "sim": 0.941,
+          "dY": 6.903,
+          "smiles_a": "O=C1CCCCCCCCCCCCCCO1",
+          "smiles_b": "O=C1CCCCO1",
+          "y_a": -5.904,
+          "y_b": 0.999
+        }
+      ]
+    }
+  ],
+  "driver_hits": "5/5",
+  "total_cliffs": 1398,
+  "verdict": "CONFIRM",
+  "runtime_seconds": 285.8
+}

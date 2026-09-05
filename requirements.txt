@@ -1,0 +1,28 @@
+# Pinned CPU-only dependencies for snptx-repro-discovery.
+#
+# The +cpu local version + the PyTorch CPU wheel index keeps the install
+# ~1.5 GB instead of pulling the ~3 GB CUDA build. torch_geometric is
+# published independently and works against +cpu builds. The engine runs
+# end to end on CPU; no GPU is required.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Numerics
+torch==2.5.1+cpu
+torch_geometric==2.7.0
+numpy>=1.26,<2
+pandas>=2.0,<3
+scikit-learn>=1.3,<2
+scipy>=1.11
+pyarrow>=14
+
+# Calibration lineage + figures
+duckdb>=1.0
+matplotlib>=3.7
+pillow>=10
+
+# Chemistry (mirrors snptx[chem], pinned for the reproducibility lock)
+rdkit==2023.9.6
+PyTDC==1.1.15
+
+# Test
+pytest>=7

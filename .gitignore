@@ -1,0 +1,28 @@
+# Generated artifacts (reference JSON/PNG under preprint/ are checked in)
+preprint/*_new.json
+preprint/e8_campaign_lineage.duckdb
+mlruns/
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build
+*.egg-info/
+build/
+dist/

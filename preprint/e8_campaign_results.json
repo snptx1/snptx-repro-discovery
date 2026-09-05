@@ -1,0 +1,163 @@
+{
+  "generated_at": "2026-09-05T20:30:26.771758+00:00",
+  "seed": 20260905,
+  "n_endpoints": 6,
+  "total_measurements_used": 140,
+  "total_fixed_sample": 356.8,
+  "total_measurements_saved": 216.8,
+  "fraction_saved": 0.608,
+  "decisions_go": 6,
+  "decisions_nogo": 0,
+  "records": [
+    {
+      "endpoint": "bbb",
+      "kind": "classification",
+      "experiment_id": "9a71319d-788f-4283-94f4-8f7ec5e5aeba",
+      "oracle": {
+        "coverage": 0.871,
+        "ece": 0.0115,
+        "base_acc": 0.849,
+        "retained_acc_at_70pct": 0.922
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.427,
+        "n_measurements": 38,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": 30.7
+      },
+      "rule": {
+        "tree_feature": "TPSA",
+        "tree_rule": "if TPSA <= 0.6210 then 0.8626 else 0.2778",
+        "meta_r2": 0.296,
+        "n_surprises": 0
+      }
+    },
+    {
+      "endpoint": "ames",
+      "kind": "classification",
+      "experiment_id": "e0c819d2-089d-4d58-81e8-90f96e2c5027",
+      "oracle": {
+        "coverage": 0.914,
+        "ece": 0.0552,
+        "base_acc": 0.776,
+        "retained_acc_at_70pct": 0.87
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.625,
+        "n_measurements": 24,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": 44.7
+      },
+      "rule": {
+        "tree_feature": "ArRings",
+        "tree_rule": "if ArRings <= -0.0002 then 0.4343 else 0.6531",
+        "meta_r2": 0.139,
+        "n_surprises": 0
+      }
+    },
+    {
+      "endpoint": "herg",
+      "kind": "classification",
+      "experiment_id": "ca000f1d-1954-4bfe-a3c9-d2801283e387",
+      "oracle": {
+        "coverage": 0.97,
+        "ece": 0.0538,
+        "base_acc": 0.782,
+        "retained_acc_at_70pct": 0.835
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.576,
+        "n_measurements": 18,
+        "fixed_sample_n": 49.0,
+        "measurements_saved": 31.0
+      },
+      "rule": {
+        "tree_feature": "HeavyAtoms",
+        "tree_rule": "if HeavyAtoms <= -0.9616 then 0.1341 else 0.7679",
+        "meta_r2": 0.322,
+        "n_surprises": 0
+      }
+    },
+    {
+      "endpoint": "solubility",
+      "kind": "regression",
+      "experiment_id": "46249552-3f2f-46bf-a6dc-1244a81c4bd9",
+      "oracle": {
+        "test_r2": 0.466,
+        "test_spearman": 0.681,
+        "mean_uncertainty": 0.399
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.792,
+        "n_measurements": 10,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": 58.7
+      },
+      "rule": {
+        "tree_feature": "MolLogP",
+        "tree_rule": "if MolLogP <= 0.3408 then -1.8372 else -5.4510",
+        "meta_r2": 0.534,
+        "n_surprises": 30
+      }
+    },
+    {
+      "endpoint": "caco2",
+      "kind": "regression",
+      "experiment_id": "15ed5e38-c5ed-4bf9-9207-50ca0899a48a",
+      "oracle": {
+        "test_r2": 0.474,
+        "test_spearman": 0.686,
+        "mean_uncertainty": 0.195
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.702,
+        "n_measurements": 17,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": 51.7
+      },
+      "rule": {
+        "tree_feature": "HBD",
+        "tree_rule": "if HBD <= 0.0284 then -4.8644 else -5.8153",
+        "meta_r2": 0.547,
+        "n_surprises": 18
+      }
+    },
+    {
+      "endpoint": "hia",
+      "kind": "classification",
+      "experiment_id": "c9849c06-6eca-40ff-a1d4-544bfaa9032a",
+      "oracle": {
+        "coverage": 0.85,
+        "ece": 0.0428,
+        "base_acc": 0.858,
+        "retained_acc_at_70pct": 0.949
+      },
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.43,
+        "n_measurements": 33,
+        "fixed_sample_n": 33.0,
+        "measurements_saved": 0.0
+      },
+      "rule": {
+        "tree_feature": "TPSA",
+        "tree_rule": "if TPSA <= 0.8941 then 0.9363 else 0.2500",
+        "meta_r2": 0.369,
+        "n_surprises": 78
+      }
+    }
+  ],
+  "duckdb_path": "pilot_phd/preprint/e8_campaign_lineage.duckdb",
+  "_runtime_s": 304.8
+}
