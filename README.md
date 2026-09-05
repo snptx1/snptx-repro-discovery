@@ -31,6 +31,34 @@ wet-lab loop and makes no clinical-performance claim. Uncertainty-driven label
 acquisition is reported as a regime-dependent effect (it helps only when the passive
 baseline is unstable), not a task-general win.
 
+## Why CPU-only when the project used a GPU
+
+Every result in this repository regenerates on **CPU**, yet the wider SNPTX project
+ran on an NVIDIA A10G during development. Both statements are true, and the split is
+deliberate:
+
+- **The confirmed results here use CPU oracles.** The calibration/SPRT/selective-
+  prediction spine (E1-E5), the E7 discovery cycle, and the E8 campaign use a
+  bootstrap / random-forest oracle over RDKit physicochemical descriptors and Morgan
+  fingerprints. These are deterministic and fast on CPU, so the engine's decision
+  logic (SPRT stopping, conformal coverage, selective prediction, abductive rules,
+  DuckDB lineage) is fully reproducible without a GPU.
+- **The GPU was used only for a line that did *not* survive scrutiny.** During
+  development we trained deep-ensemble GIN graph-neural-network oracles on the GPU
+  (~1 hr per run on one A10G) to test an uncertainty-driven *label-acquisition*
+  headline. Under hardening (scaffold cold splits, 3 seeds, 2000x bootstrap CIs) that
+  headline was **refuted** and demoted to a characterized regime law (E5, fig5). Only
+  the pre-computed curves from that GPU work are committed here
+  (`preprint/g1_harden_curves.npz`); fig5 just *plots* them, so no GPU is needed to
+  reproduce the figure.
+- **The GNN oracle remains a pluggable option, not a requirement.** The methods
+  describe a GIN/GAT deep-learning oracle (`src/models/gnn.py`); `make install-gpu`
+  adds the CUDA wheels for anyone who wants to retrain it. The headline numbers do
+  not depend on it.
+
+In short: GPU was for the *refuted* deep-learning acquisition experiments; the
+*confirmed* engine and every number in the manuscript run on CPU.
+
 ## Quickstart
 
 ```bash

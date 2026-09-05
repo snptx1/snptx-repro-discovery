@@ -24,5 +24,10 @@ pillow>=10
 rdkit==2023.9.6
 PyTDC==1.1.15
 
+# Notebook walkthrough (make notebook)
+jupyter>=1
+nbconvert>=7
+ipykernel>=6
+
 # Test
 pytest>=7

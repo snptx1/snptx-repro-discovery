@@ -1,4 +1,4 @@
-.PHONY: help install install-gpu repro repro-spine repro-campaign figures test clean
+.PHONY: help install install-gpu repro repro-spine repro-campaign figures notebook test clean
 
 PY  := .venv/bin/python
 # Self-contained: the vendored framework lives under ./src, so both the legacy
@@ -15,6 +15,7 @@ help:
 	@echo "  make repro-campaign E8 end-to-end autonomous campaign + timeline/lineage (CPU, ~5 min)"
 	@echo "  make repro          repro-spine then repro-campaign"
 	@echo "  make figures        Regenerate every figure under preprint/figures/"
+	@echo "  make notebook       Execute the guided math-to-figure walkthrough notebook"
 	@echo "  make test           Run the fast, no-download determinism regression tests"
 	@echo "  make clean          Remove caches and the regenerable DuckDB lineage store"
 	@echo ""
@@ -39,6 +40,11 @@ repro-campaign:
 repro: repro-spine repro-campaign
 
 figures: repro
+
+notebook:
+	cd notebooks && ../$(PY) -m jupyter nbconvert --to notebook --execute \
+		walkthrough.ipynb --output walkthrough.ipynb \
+		--ExecutePreprocessor.timeout=900
 
 test:
 	$(ENV) $(PY) -m pytest tests/ -v
