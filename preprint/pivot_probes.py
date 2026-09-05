@@ -31,7 +31,8 @@ from scipy.stats import norm, spearmanr
 warnings.filterwarnings("ignore")
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
+# repo root = nearest ancestor that contains ./src (works at any nesting depth)
+ROOT = next((p for p in [HERE, *HERE.parents] if (p / "src").is_dir()), HERE.parents[1])
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(HERE))
 
@@ -85,7 +86,9 @@ def murcko(smiles: str) -> str | None:
 
 def load(endpoint: str):
     """Return dict with smiles, y, descriptors X, morgan fps, scaffold ids."""
-    adapter = ADMETAdapter(raw_dir=str(ROOT / "data" / "raw" / "admet"))
+    raw = ROOT / "data" / "raw" / "admet"
+    raw.mkdir(parents=True, exist_ok=True)  # TDC downloads here on first run
+    adapter = ADMETAdapter(raw_dir=str(raw))
     df = adapter.build(endpoint, split="all")
     smis, ys, X, fps, scafs = [], [], [], [], []
     scaf_index: dict[str, int] = {}
