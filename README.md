@@ -1,6 +1,6 @@
 # snptx-repro-discovery
 
-Public reproducibility artifact for the SNPTX calibrated, sequential decision engine
+Public reproducibility artifact for the SNPTX decision engine
 for molecular property discovery. Everything here runs **end to end on CPU**,
 deterministic at `seed=20260905`, from a tagged commit.
 
@@ -21,17 +21,17 @@ Wired together with a pluggable oracle, a novelty archive, an abductive discover
 cycle, and DuckDB provenance, the engine runs an **end-to-end autonomous campaign**
 that reaches 6 go/no-go decisions using **140 vs 357** fixed-sample measurements
 (**61% fewer**), recovers the established structure-property driver on **5 of 5** ADMET
-endpoints, and surfaces **1398** interpretable structure-property cliffs — every
-decision traced from task to discovered rule.
+endpoints, and surfaces **1398** interpretable structure-property cliffs. Every
+decision is traced from task to discovered rule.
 
-## What this is not
+## To be fair
 
 This is a retrospective, in-silico reproduction over public libraries. It closes no
 wet-lab loop and makes no clinical-performance claim. Uncertainty-driven label
 acquisition is reported as a regime-dependent effect (it helps only when the passive
 baseline is unstable), not a task-general win.
 
-## Why CPU-only when the project used a GPU
+## Why CPU-only when the project deployed GPU
 
 Every result in this repository regenerates on **CPU**, yet the wider SNPTX project
 ran on an NVIDIA A10G during development. Both statements are true, and the split is
@@ -40,10 +40,10 @@ deliberate:
 - **The confirmed results here use CPU oracles.** The calibration/SPRT/selective-
   prediction spine (E1-E5), the E7 discovery cycle, and the E8 campaign use a
   bootstrap / random-forest oracle over RDKit physicochemical descriptors and Morgan
-  fingerprints. These are deterministic and fast on CPU, so the engine's decision
+  fingerprints. These are fast on CPU, so the engine's decision
   logic (SPRT stopping, conformal coverage, selective prediction, abductive rules,
   DuckDB lineage) is fully reproducible without a GPU.
-- **The GPU was used only for a line that did *not* survive scrutiny.** During
+- **GPU was used for a line that did *not* survive scrutiny.** During
   development we trained deep-ensemble GIN graph-neural-network oracles on the GPU
   (~1 hr per run on one A10G) to test an uncertainty-driven *label-acquisition*
   headline. Under hardening (scaffold cold splits, 3 seeds, 2000x bootstrap CIs) that
@@ -56,7 +56,7 @@ deliberate:
   adds the CUDA wheels for anyone who wants to retrain it. The headline numbers do
   not depend on it.
 
-In short: GPU was for the *refuted* deep-learning acquisition experiments; the
+In short: GPU was for deep-learning acquisition experiments; the
 *confirmed* engine and every number in the manuscript run on CPU.
 
 ## Quickstart
@@ -70,7 +70,7 @@ make repro-spine        # E1-E5 spine + E7 discovery + rule cards (CPU, ~5 min; 
 make repro-campaign     # E8 end-to-end autonomous campaign + figures (CPU, ~5 min)
 ```
 
-Figures land in `preprint/figures/` (git-dark theme, `src/snptx/viz/theme.py`); the
+Figures land in `preprint/figures/`; the
 campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store is
 `preprint/e8_campaign_lineage.duckdb` (regenerable, gitignored).
 
@@ -92,14 +92,13 @@ campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store
 - `intelligence/surrogate.py` — GP surrogate + EI/UCB/KG/Thompson acquisition
 - `models/gnn.py` — GIN/GAT graph encoders
 - `adapters/admet.py`, `adapters/drugcomb.py` — TDC ADMET + molecular-graph featurizer
-- `snptx/viz/theme.py` — the SNPTX git-dark visualization theme
+- `snptx/viz/theme.py` — the visualization theme
 
 ## Reproducibility invariants
 
 - **SEED** deterministic at `seed=20260905` across Python, NumPy, and scikit-learn.
 - **ENV** pinned via `requirements.txt`; Python `3.11.2` (see `PYTHON_VERSION.txt`).
-- **DATA** public TDC ADMET benchmarks, fetched on first run with a browser
-  User-Agent shim (`preprint/_tdc_download_patch.py`) to clear the Dataverse WAF.
+- **DATA** public TDC ADMET benchmarks, fetched on first run.
 - **LINEAGE** every campaign decision is logged to a DuckDB catalog with its oracle
   metrics, SPRT verdict, and discovered rule.
 
