@@ -1,0 +1,30 @@
+{
+  "study": "attention_attribution",
+  "generated_at": "2026-09-09T04:40:59.764639+00:00",
+  "device": "cuda",
+  "smoke": false,
+  "split_seed": 0,
+  "rule": "salient atom = aromatic OR nitrogen (from node features)",
+  "results": {
+    "herg": {
+      "endpoint": "herg",
+      "val_auroc": 0.6908,
+      "test_auroc": 0.77,
+      "n_test_molecules": 148,
+      "node_attention_auroc": 0.521,
+      "topk_enrichment": 0.0383,
+      "salient_base_rate": 0.4737,
+      "topk": 3
+    },
+    "bbb": {
+      "endpoint": "bbb",
+      "val_auroc": 0.8017,
+      "test_auroc": 0.7556,
+      "n_test_molecules": 370,
+      "node_attention_auroc": 0.4877,
+      "topk_enrichment": -0.0366,
+      "salient_base_rate": 0.4427,
+      "topk": 3
+    }
+  }
+}

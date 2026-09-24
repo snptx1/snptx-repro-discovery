@@ -1,0 +1,19 @@
+# Large / regenerable state — never commit.
+cache/
+dryrun/
+artifacts/checkpoints/
+artifacts/_smoke/
+artifacts/train.log
+artifacts/records.jsonl
+artifacts/progress.json
+artifacts/*.duckdb
+artifacts/*.duckdb.wal
+*.pt
+__pycache__/
+
+# DO commit the small result artifacts the notebook/manuscript render:
+#   artifacts/multitask_metrics.json, artifacts/learning_curves.npz,
+#   artifacts/ensemble_uncertainty.json, artifacts/ensemble_predictions.npz,
+#   figures/*.png
+# The DuckDB lineage store (artifacts/*.duckdb) is regenerable via `make campaign`;
+# campaign_learned.json records its path and per-endpoint experiment IDs instead.

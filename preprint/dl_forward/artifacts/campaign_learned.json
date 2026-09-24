@@ -1,0 +1,82 @@
+{
+  "study": "AGENT_09 learned-oracle decision campaign",
+  "generated_at": "2026-09-09T21:24:25.490114+00:00",
+  "oracle": "K=5 deep ensemble (multi-task graph stack)",
+  "sprt": {
+    "alpha": 0.05,
+    "beta": 0.2,
+    "meaningful_effect_sigma": 0.3,
+    "top_fraction": 0.3
+  },
+  "lineage_duckdb": "pilot_phd/preprint/dl_forward/artifacts/campaign_learned_lineage.duckdb",
+  "per_endpoint": {
+    "bbb": {
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.254,
+        "n_measurements": 85,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": -16.3
+      },
+      "conformal_coverage_target": 0.9,
+      "conf_set_size_at_90": 1.299,
+      "selective_acc_at_70": 0.866,
+      "ece": 0.0853,
+      "experiment_id": "580240b4-7b64-4930-ba0d-f2109363994a"
+    },
+    "ames": {
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.636,
+        "n_measurements": 20,
+        "fixed_sample_n": 68.7,
+        "measurements_saved": 48.7
+      },
+      "conformal_coverage_target": 0.9,
+      "conf_set_size_at_90": 1.309,
+      "selective_acc_at_70": 0.83,
+      "ece": 0.0551,
+      "experiment_id": "79fad8d2-8db4-4af5-98ec-caebe8fd6ab3"
+    },
+    "herg": {
+      "sprt": {
+        "decision": "reject_h0",
+        "verdict": "GO (meaningful shift)",
+        "effect_observed": 0.587,
+        "n_measurements": 14,
+        "fixed_sample_n": 45.0,
+        "measurements_saved": 31.0
+      },
+      "conformal_coverage_target": 0.9,
+      "conf_set_size_at_90": 1.222,
+      "selective_acc_at_70": 0.785,
+      "ece": 0.0596,
+      "experiment_id": "fb9122eb-1b05-4917-b218-f5e8b503daa1"
+    },
+    "hia": {
+      "sprt": {
+        "decision": "continue",
+        "verdict": "UNDECIDED (budget)",
+        "effect_observed": 0.276,
+        "n_measurements": 31,
+        "fixed_sample_n": 31.0,
+        "measurements_saved": 0.0
+      },
+      "conformal_coverage_target": 0.9,
+      "conf_set_size_at_90": 1.019,
+      "selective_acc_at_70": 0.932,
+      "ece": 0.0737,
+      "experiment_id": "fc6d1fbb-2152-4313-8bfa-c937d3bd265e"
+    }
+  },
+  "summary": {
+    "n_endpoints": 4,
+    "n_go_decisions": 3,
+    "total_measurements_used": 150,
+    "total_fixed_sample": 213.4,
+    "measurements_saved": 63.4,
+    "pct_saved": 29.7
+  }
+}
