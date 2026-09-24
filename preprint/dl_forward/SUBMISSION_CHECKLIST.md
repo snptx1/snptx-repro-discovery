@@ -60,7 +60,7 @@ scratch.
 - Repository: https://github.com/snptx1/snptx-repro-discovery (dl_forward
   subdirectory)
 - Tag to cite: `dl-forward-preprint-v1`
-- Commit to cite: `2164310ac39b1860fe889024e4ed496b9bd72150`
+- Commit to cite: `5fab807b9b87b2c02c3b54a2a6fad1afe0f808cb`
 - Every headline number regenerates from this tagged commit on CPU (fast
   tier renders committed artifacts; GPU tier retrains from scratch).
 
