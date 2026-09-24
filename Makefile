@@ -43,7 +43,7 @@ figures: repro
 
 notebook:
 	cd notebooks && ../$(PY) -m jupyter nbconvert --to notebook --execute \
-		walkthrough.ipynb --output walkthrough.ipynb \
+		walkthrough_calibrated_sequential_discovery.ipynb --output walkthrough_calibrated_sequential_discovery.ipynb \
 		--ExecutePreprocessor.timeout=900
 
 test:

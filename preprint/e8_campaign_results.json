@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T20:30:26.771758+00:00",
+  "generated_at": "2026-09-09T19:39:33.715690+00:00",
   "seed": 20260905,
   "n_endpoints": 6,
   "total_measurements_used": 140,
@@ -12,7 +12,7 @@
     {
       "endpoint": "bbb",
       "kind": "classification",
-      "experiment_id": "9a71319d-788f-4283-94f4-8f7ec5e5aeba",
+      "experiment_id": "b0acfa8d-7f09-440f-97d6-ad6d0e3d6f38",
       "oracle": {
         "coverage": 0.871,
         "ece": 0.0115,
@@ -37,7 +37,7 @@
     {
       "endpoint": "ames",
       "kind": "classification",
-      "experiment_id": "e0c819d2-089d-4d58-81e8-90f96e2c5027",
+      "experiment_id": "bf238706-6fc0-47f7-bf40-c1896a4149a7",
       "oracle": {
         "coverage": 0.914,
         "ece": 0.0552,
@@ -62,7 +62,7 @@
     {
       "endpoint": "herg",
       "kind": "classification",
-      "experiment_id": "ca000f1d-1954-4bfe-a3c9-d2801283e387",
+      "experiment_id": "5bd4aef7-27a7-49e8-826d-f89923e29f4d",
       "oracle": {
         "coverage": 0.97,
         "ece": 0.0538,
@@ -87,7 +87,7 @@
     {
       "endpoint": "solubility",
       "kind": "regression",
-      "experiment_id": "46249552-3f2f-46bf-a6dc-1244a81c4bd9",
+      "experiment_id": "95630700-e134-4de0-9514-ab6a4fed30bd",
       "oracle": {
         "test_r2": 0.466,
         "test_spearman": 0.681,
@@ -111,7 +111,7 @@
     {
       "endpoint": "caco2",
       "kind": "regression",
-      "experiment_id": "15ed5e38-c5ed-4bf9-9207-50ca0899a48a",
+      "experiment_id": "b416604f-edcb-4e2d-ae93-e33797e7e9dd",
       "oracle": {
         "test_r2": 0.474,
         "test_spearman": 0.686,
@@ -135,7 +135,7 @@
     {
       "endpoint": "hia",
       "kind": "classification",
-      "experiment_id": "c9849c06-6eca-40ff-a1d4-544bfaa9032a",
+      "experiment_id": "e7c36568-5fe4-4f18-8713-bfa7f017aeef",
       "oracle": {
         "coverage": 0.85,
         "ece": 0.0428,
@@ -158,6 +158,6 @@
       }
     }
   ],
-  "duckdb_path": "pilot_phd/preprint/e8_campaign_lineage.duckdb",
-  "_runtime_s": 304.8
+  "duckdb_path": "snptx-repro-discovery/preprint/e8_campaign_lineage.duckdb",
+  "_runtime_s": 310.4
 }

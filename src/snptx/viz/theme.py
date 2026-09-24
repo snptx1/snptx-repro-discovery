@@ -34,12 +34,23 @@ NEON_ORANGE = "#ff6e00"
 NEON_RED    = "#ff003c"
 NEON_PINK   = "#ff00e4"
 NEON_YELLOW = "#e6ff00"
+NEON_GREY   = "#c9d1d9"
 NEON_CYCLE  = [NEON_BLUE, NEON_GREEN, NEON_PURPLE, NEON_ORANGE, NEON_RED, NEON_PINK, NEON_YELLOW]
 
+# -- Preferred series palette (lines and bars) --------------------------------
+# House style: bright neon blue / yellow / pink / grey, no orange. Ordered so the
+# first three series read as three distinct saturated hues and the fourth (grey)
+# reads as a muted baseline/reference series.
+SERIES_CYCLE = [NEON_BLUE, NEON_YELLOW, NEON_PINK, NEON_GREY]
+
+# -- Line styling defaults (thin and bright) ----------------------------------
+LINE_WIDTH  = 1.1   # thin lines; series stay legible because the hues are bright
+MARKER_SIZE = 4.0
+
 # -- Bar styling defaults -----------------------------------------------------
-BAR_FILL_ALPHA = 0.18
-BAR_EDGE_WIDTH = 1.8
-BAR_WIDTH      = 0.28
+BAR_FILL_ALPHA = 0.22   # translucent fill so the bright neon edge dominates
+BAR_EDGE_WIDTH = 1.2    # thin, crisp neon outline
+BAR_WIDTH      = 0.20   # narrow bars
 
 GH_FONT = "DejaVu Sans"
 
@@ -80,6 +91,29 @@ def dark_legend(ax, **kwargs):
     """Add a dark-themed legend to ``ax``."""
     return ax.legend(facecolor=CARD_BG, edgecolor=BORDER,
                      labelcolor=TEXT_PRIMARY, framealpha=0.9, **kwargs)
+
+
+def use_neon_rcparams(plt_module) -> None:
+    """Set global matplotlib defaults to the SNPTX neon house style.
+
+    Applies the dark canvas, the blue/yellow/pink/grey series cycle (no orange),
+    and thin, bright line defaults so every live figure matches the committed
+    ones without per-plot color bookkeeping. Pass the ``matplotlib.pyplot``
+    module so this helper stays import-light.
+    """
+    from cycler import cycler
+
+    plt_module.rcParams.update({
+        "figure.facecolor": DARK_BG, "savefig.facecolor": DARK_BG,
+        "axes.facecolor": CARD_BG, "axes.edgecolor": BORDER,
+        "axes.labelcolor": TEXT_SECONDARY, "axes.titlecolor": TEXT_PRIMARY,
+        "text.color": TEXT_PRIMARY, "xtick.color": TEXT_SECONDARY,
+        "ytick.color": TEXT_SECONDARY, "grid.color": BORDER, "grid.alpha": 0.4,
+        "axes.grid": True, "axes.axisbelow": True,
+        "axes.prop_cycle": cycler(color=SERIES_CYCLE),
+        "lines.linewidth": LINE_WIDTH, "lines.markersize": MARKER_SIZE,
+        "font.size": 11, "font.family": GH_FONT,
+    })
 
 
 def dark_bar(ax, x, height, *, color=None, neon=None, width=None,

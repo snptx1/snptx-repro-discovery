@@ -78,7 +78,7 @@ campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store
 
 | Target | Script | Produces |
 |---|---|---|
-| `repro-spine` | `preprint/feasibility_and_figures.py` | E1-E5: `fig1_sprt_efficiency` … `fig6_molecules`, `feasibility_summary.json` |
+| `repro-spine` | `preprint/feasibility_and_figures.py` | E1-E5: `fig1_sprt_efficiency`, `fig2_molecules`, `fig3_conformal_coverage`, `fig4_calibration_reliability`, `fig5_selective_prediction`, `fig6_label_efficiency_regime`, `feasibility_summary.json` |
 |  | `preprint/e7_discovery_probe.py` | 5/5 driver rediscovery + 1398 cliffs, `e7_discovery_results.json` |
 |  | `preprint/e7_render.py` | `fig7_rule_cards`, `fig8_cliff_panel` |
 | `repro-campaign` | `preprint/e8_campaign.py` | E8: `fig9_campaign_timeline`, `fig10_lineage_graph`, `e8_campaign_results.json`, DuckDB lineage |

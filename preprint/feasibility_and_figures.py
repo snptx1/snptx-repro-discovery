@@ -1,18 +1,20 @@
 """Complete feasibility checks for the calibrated sequential-decision spine, and
 generation of publication-style example figures from real ADMET data.
 
-Confirmed pillars this script hardens and visualizes:
+Confirmed pillars this script hardens and visualizes (numbered to match the
+order they are presented in notebooks/walkthrough_calibrated_sequential_discovery.ipynb):
   1. Sequential decision efficiency (SPRT): operating-characteristic sweep of
      expected sample size vs a fixed-sample test across effect sizes, with the
      real-data operating point annotated.
-  2. Robust calibrated uncertainty: reliability diagram + ECE, and split-conformal
-     coverage under random vs leakage-controlled (scaffold) shift across tasks.
-  3. Selective prediction: risk-coverage curves (retained accuracy as the model
+  2. Molecular structure panel (RDKit) to show the substrate.
+  3-4. Robust calibrated uncertainty: split-conformal coverage under random vs
+     leakage-controlled (scaffold) shift across tasks, and the reliability
+     diagram + ECE.
+  5. Selective prediction: risk-coverage curves (retained accuracy as the model
      abstains on its least-confident predictions), random and scaffold splits.
-  4. The characterized label-efficiency regime finding (from the committed
+  6. The characterized label-efficiency regime finding (from the committed
      g1_harden curves): acquisition helps only where the passive baseline is
      unstable.
-  5. Molecular structure panel (RDKit) to show the substrate.
 
 CPU-only. Figures -> pilot_phd/preprint/figures/. Numbers -> feasibility_summary.json.
 """
@@ -47,12 +49,13 @@ from rdkit.Chem import Draw  # noqa: E402
 from rdkit.Chem.Draw import rdMolDraw2D  # noqa: E402
 
 from snptx.viz.theme import (  # noqa: E402
-    ACCENT_BLUE,
-    ACCENT_GREEN,
-    ACCENT_ORANGE,
     BORDER,
     CARD_BG,
     DARK_BG,
+    NEON_BLUE,
+    NEON_GREY,
+    NEON_PINK,
+    NEON_YELLOW,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
     hex_to_rgba,
@@ -75,9 +78,11 @@ plt.rcParams.update({
     "axes.spines.top": False, "axes.spines.right": False,
     "axes.grid": True, "grid.color": BORDER, "grid.alpha": 0.4,
     "axes.axisbelow": True, "figure.constrained_layout.use": True,
+    "lines.linewidth": 1.2,  # thin, bright neon strokes
     "legend.facecolor": CARD_BG, "legend.edgecolor": BORDER, "legend.framealpha": 0.9,
 })
-BLUE, ORANGE, GREEN, GREY = ACCENT_BLUE, ACCENT_ORANGE, ACCENT_GREEN, TEXT_SECONDARY
+# House neon palette (no orange): blue / pink / yellow series over a bright grey reference.
+BLUE, ORANGE, GREEN, GREY = NEON_BLUE, NEON_PINK, NEON_YELLOW, NEON_GREY
 
 
 def log(m):
@@ -213,7 +218,7 @@ def fig_calibration_and_selective(bbb) -> dict:
     ax.set_xlabel("Predicted confidence"); ax.set_ylabel("Empirical accuracy")
     ax.set_title("Calibration reliability (BBB, scaffold-aware)")
     ax.legend(frameon=False, loc="upper left")
-    fig.savefig(FIGDIR / "fig3_calibration_reliability.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig4_calibration_reliability.png"); plt.close(fig)
 
     # selective prediction risk-coverage
     cr, ar = risk_coverage(pt, bbb["y"][te].astype(int))
@@ -226,7 +231,7 @@ def fig_calibration_and_selective(bbb) -> dict:
     ax.set_ylabel("Accuracy on retained set")
     ax.set_title("Selective prediction: abstaining raises retained accuracy")
     ax.legend(frameon=False)
-    fig.savefig(FIGDIR / "fig2_selective_prediction.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig5_selective_prediction.png"); plt.close(fig)
 
     return {"ece": round(ece, 4), "conformal_target": 1 - alpha,
             "coverage_random_split": round(cov_rand, 3),
@@ -257,16 +262,18 @@ def fig_coverage_across_tasks(task_data: dict) -> dict:
         covr.append(_coverage(pt, d["y"][te].astype(int), q))
         covs.append(_coverage(pts, d["y"][tes].astype(int), qs))
 
-    x = np.arange(len(labels)); w = 0.36
+    x = np.arange(len(labels)); w = 0.30
     fig, ax = plt.subplots(figsize=(6.2, 4.2))
-    ax.bar(x - w / 2, covr, w, color=BLUE, label="random split")
-    ax.bar(x + w / 2, covs, w, color=ORANGE, label="scaffold (shifted) split")
-    ax.axhline(1 - alpha, color=GREEN, ls="--", lw=1.5, label=f"target {1-alpha:.2f}")
+    ax.bar(x - w / 2, covr, w, color=hex_to_rgba(BLUE, 0.22), edgecolor=BLUE,
+           linewidth=1.2, label="random split")
+    ax.bar(x + w / 2, covs, w, color=hex_to_rgba(ORANGE, 0.22), edgecolor=ORANGE,
+           linewidth=1.2, label="scaffold (shifted) split")
+    ax.axhline(1 - alpha, color=GREEN, ls="--", lw=1.2, label=f"target {1-alpha:.2f}")
     ax.set_xticks(x); ax.set_xticklabels(labels)
     ax.set_ylim(0.6, 1.0); ax.set_ylabel("Empirical coverage")
     ax.set_title("Conformal coverage holds under leakage-controlled shift")
     ax.legend(frameon=False, ncol=3, fontsize=8.5)
-    fig.savefig(FIGDIR / "fig4_conformal_coverage.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig3_conformal_coverage.png"); plt.close(fig)
     return {"tasks": labels, "coverage_random": [round(c, 3) for c in covr],
             "coverage_scaffold": [round(c, 3) for c in covs]}
 
@@ -293,7 +300,7 @@ def fig_label_efficiency_regime() -> dict:
         ax.axhline(0, color=BORDER, lw=0.8, alpha=0.6)
     axes[0].set_ylabel("held-out scaffold $R^2$"); axes[0].legend(frameon=False, loc="lower right")
     fig.suptitle("Active acquisition helps only when the passive baseline is unstable", fontsize=11)
-    fig.savefig(FIGDIR / "fig5_label_efficiency_regime.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig6_label_efficiency_regime.png"); plt.close(fig)
     return {"source": "g1_harden_curves.npz"}
 
 
@@ -310,7 +317,7 @@ def fig_molecules(data) -> dict:
     opts.setBackgroundColour(hex_to_rgba(DARK_BG))
     img = Draw.MolsToGridImage(mols, molsPerRow=3, subImgSize=(260, 200),
                                legends=legs, drawOptions=opts)
-    img.save(str(FIGDIR / "fig6_molecules.png"))
+    img.save(str(FIGDIR / "fig2_molecules.png"))
     return {"n_shown": len(mols), "range": [round(float(data["y"][order[0]]), 2),
                                             round(float(data["y"][order[-1]]), 2)]}
 
@@ -327,13 +334,13 @@ def main() -> None:
 
     summary = {}
     log("fig1: SPRT efficiency sweep ...");        summary["sprt"] = fig_sprt(lipo)
-    log("fig2/3: calibration + selective prediction ...")
+    log("fig2: molecule panel ...");               summary["molecules"] = fig_molecules(lipo)
+    log("fig4/5: calibration + selective prediction ...")
     summary["calibration_selective"] = fig_calibration_and_selective(bbb)
-    log("fig4: conformal coverage across tasks ...")
+    log("fig3: conformal coverage across tasks ...")
     summary["coverage_across_tasks"] = fig_coverage_across_tasks(
         {"BBB": bbb, "hERG": herg, "AMES": ames})
-    log("fig5: label-efficiency regime ...");      summary["label_efficiency_regime"] = fig_label_efficiency_regime()
-    log("fig6: molecule panel ...");               summary["molecules"] = fig_molecules(lipo)
+    log("fig6: label-efficiency regime ...");      summary["label_efficiency_regime"] = fig_label_efficiency_regime()
 
     summary["_runtime_s"] = round(time.time() - t0, 1)
     OUT_JSON.write_text(json.dumps(summary, indent=2))

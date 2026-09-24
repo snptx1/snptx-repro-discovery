@@ -65,11 +65,6 @@ import _tdc_download_patch  # noqa: E402,F401
 from pivot_probes import DESC_FNS, _fp_matrix, load  # noqa: E402
 
 from snptx.viz.theme import (  # noqa: E402
-    ACCENT_BLUE,
-    ACCENT_GREEN,
-    ACCENT_ORANGE,
-    ACCENT_PURPLE,
-    ACCENT_RED,
     BORDER,
     CARD_BG,
     DARK_BG,
@@ -122,9 +117,12 @@ plt.rcParams.update({
     "axes.axisbelow": True, "figure.constrained_layout.use": True,
     "legend.facecolor": CARD_BG, "legend.edgecolor": BORDER, "legend.framealpha": 0.9,
 })
+from snptx.viz.theme import (  # noqa: E402
+    NEON_BLUE, NEON_GREY, NEON_PINK, NEON_PURPLE, NEON_RED, NEON_YELLOW)
+# House neon palette (no orange). ORANGE alias now maps to neon pink.
 BLUE, ORANGE, GREEN, GREY, RED, INK = (
-    ACCENT_BLUE, ACCENT_ORANGE, ACCENT_GREEN, TEXT_SECONDARY, ACCENT_RED, TEXT_PRIMARY)
-PURPLE = ACCENT_PURPLE
+    NEON_BLUE, NEON_PINK, NEON_YELLOW, NEON_GREY, NEON_RED, TEXT_PRIMARY)
+PURPLE = NEON_PURPLE
 
 
 def log(m: str) -> None:

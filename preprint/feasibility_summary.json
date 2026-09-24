@@ -8,6 +8,13 @@
     "mean_power": 0.846,
     "mean_type1": 0.043
   },
+  "molecules": {
+    "n_shown": 6,
+    "range": [
+      -1.5,
+      4.5
+    ]
+  },
   "calibration_selective": {
     "ece": 0.0435,
     "conformal_target": 0.9,
@@ -37,12 +44,5 @@
   "label_efficiency_regime": {
     "source": "g1_harden_curves.npz"
   },
-  "molecules": {
-    "n_shown": 6,
-    "range": [
-      -1.5,
-      4.5
-    ]
-  },
-  "_runtime_s": 24.4
+  "_runtime_s": 27.4
 }

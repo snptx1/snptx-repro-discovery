@@ -43,10 +43,6 @@ from rdkit import Chem, RDLogger  # noqa: E402
 from rdkit.Chem.Draw import rdMolDraw2D  # noqa: E402
 
 from snptx.viz.theme import (  # noqa: E402
-    ACCENT_BLUE,
-    ACCENT_GREEN,
-    ACCENT_ORANGE,
-    ACCENT_PURPLE,
     CARD_BG,
     DARK_BG,
     TEXT_PRIMARY,
@@ -62,9 +58,12 @@ plt.rcParams.update({
     "figure.facecolor": DARK_BG, "savefig.facecolor": DARK_BG,
     "text.color": TEXT_PRIMARY,
 })
+from snptx.viz.theme import (  # noqa: E402
+    NEON_BLUE, NEON_GREY, NEON_PINK, NEON_PURPLE, NEON_YELLOW)
+# House neon palette (no orange). ORANGE alias now maps to neon pink.
 BLUE, ORANGE, GREEN, GREY, INK = (
-    ACCENT_BLUE, ACCENT_ORANGE, ACCENT_GREEN, TEXT_SECONDARY, TEXT_PRIMARY)
-REF_EDGE = ACCENT_PURPLE  # muted accent for the semi-circular reference card
+    NEON_BLUE, NEON_PINK, NEON_YELLOW, NEON_GREY, TEXT_PRIMARY)
+REF_EDGE = NEON_PURPLE  # muted accent for the semi-circular reference card
 
 # lead demos first, semi-circular lipophilicity reference last (muted)
 CARD_ORDER = ["bbb", "solubility", "hia", "caco2", "lipophilicity"]
