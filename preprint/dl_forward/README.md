@@ -1,61 +1,52 @@
-# dl_forward — DL-forward elevation of Block B (AGENT_09)
+# dl_forward — learned representations and calibrated ensemble uncertainty
 
-New, non-destructive work area for the re-scoped study
-(`pilot_phd/agent_prompts/AGENT_09_dl_forward_multitask_uncertainty_study.md`).
-It elevates the already-built SNPTX ML/DL stack into the star of the study, with two
-positive headline pillars:
+Companion study to the top-level engine (`../MANUSCRIPT_calibrated_sequential_discovery.md`).
+Where the top-level work uses a descriptor/random-forest oracle, this folder swaps in a
+learned multi-task graph encoder and asks two questions:
 
-1. Multi-task representation transfer (lead result).
-2. Uncertainty-to-decisions (novelty).
+1. **Representation transfer.** Does a single graph encoder trained jointly across six
+   ADMET endpoints help the data-poor ones?
+2. **Uncertainty-to-decisions.** Is a calibrated deep ensemble the best way to turn a
+   graph model's uncertainty into a go/no-go decision?
 
-Nothing here overwrites the prior feasibility work. The existing CPU probes,
-`MANUSCRIPT_calibrated_sequential_discovery.md`, figures fig1..fig10, and committed
-artifacts stay intact as the Tier-1 fast-read track. New GPU artifacts, a new
-manuscript file, and a new elevated notebook are added alongside them.
-
-## Locked decisions (confirmed by applicant, 2026-09-08)
-
-1. Endpoint typing (agent judgement): classification = BBB, AMES, hERG, HIA
-   (AUROC/AUPRC); regression = Solubility (AqSolDB), Caco2 (Wang) (MAE/R2). Mixed
-   multi-task head with per-endpoint loss weighting.
-2. Ensemble + seeds: K=5 deep ensemble, 5 seeds (as spec).
-3. Self-supervised pretraining (Hu et al. node/edge-mask): first pass without it,
-   then add it as a Pillar-1 ablation.
-4. GPU target: train on the local A10G (main remote session), wire a `make train-gnn`
-   entry point (Tier 2). Confirmed device: NVIDIA A10G 23 GB, torch 2.5.1+cu121.
-5. Old active-learning section: moved fully to future work (no longer a headline).
+See `MANUSCRIPT_learned_representations_admet.md` for the full write-up and
+`walkthrough_learned_representations_admet.ipynb` for a rendered, code-to-figure
+walkthrough.
 
 ## Reproducibility tiers
 
-- Tier 1 (CPU, fast): the notebook renders committed GPU artifacts for a fast reviewer read.
-- Tier 2 (GPU): `make train-gnn` regenerates checkpoints/curves; seeds pinned,
-  `cudnn.deterministic` set, residual-nondeterminism caveat stated (report CIs over
-  seeds, not bitwise reproduction).
+- **Tier 1 (CPU, fast).** The notebook renders the committed artifacts in
+  `artifacts/` and regenerates every figure in `figures/` from them.
+- **Tier 2 (GPU, full retrain).** `train_multitask_gnn.py`,
+  `make_ensemble_uncertainty.py`, `pretrain_ablation.py`, and `attention_attribution.py`
+  retrain from scratch on the six TDC ADMET endpoints. Seeds are pinned and
+  `cudnn.deterministic` is set; report confidence intervals over seeds rather than
+  expecting bitwise reproduction.
 
-## Engine modules reused (not rebuilt)
+## What each script produces
 
-- Molecular featurizer: `src/adapters/drugcomb.py::DrugCombAdapter.smiles_to_graph`
-  (node feats 9-dim, edge feats 3-dim).
-- ADMET data: `src/adapters/admet.py::ADMETAdapter` (TDC, already dvc-pulled under
-  `data/raw/admet/`).
-- GNN zoo + factory: `src/models/gnn.py::build_gnn_model` (GIN/GINE trunk,
-  PairNorm + DropEdge, `extract_embeddings` gives the shared graph embedding).
-- Uncertainty toolkit: `src/safety/uncertainty.py` (conformal, temp scaling, ECE,
-  MC-dropout) — extended in Pillar 2.
+| Script | Produces |
+|---|---|
+| `train_multitask_gnn.py` | `artifacts/multitask_metrics.json`, per-seed checkpoints |
+| `pretrain_ablation.py` | `artifacts/pretrain_ablation.json`, `fig_pretrain_ablation.png` |
+| `make_ensemble_uncertainty.py` | `artifacts/ensemble_uncertainty.json`, `fig_ensemble_calibration.png`, `fig_conformal_efficiency.png` |
+| `attention_attribution.py` | `artifacts/attention_attribution.json`, `fig_attention_probe.png` |
+| `e8_campaign_learned.py` | `artifacts/campaign_learned.json`, `fig_campaign_efficiency.png` |
+| `architecture_figure_v2.py` | `fig0_architecture_v2.png` |
+| `figures.py` | renders the figures above from committed artifacts |
 
-## Build sequence (this track)
+## Engine modules reused (not duplicated)
 
-1. Pillar 1 harness + train script (this folder), single-task + multi-task, 5 seeds,
-   learning-curve fractions. <- current
-2. HITL checkpoint, then the full A10G run.
-3. Pillar 2 ensemble uncertainty (extends g2 + uncertainty.py), consumes P1 checkpoints.
-4. Attention attribution.
-5. Learned-oracle campaign (patch e8), figures, definitive table.
-6. New manuscript + elevated notebook, kept in lockstep and in sync with the public mirror.
+- Molecular featurizer: `../../src/adapters/drugcomb.py::DrugCombAdapter.smiles_to_graph`
+- ADMET data: `../../src/adapters/admet.py::ADMETAdapter` (TDC, fetched on first run)
+- GNN encoders: `../../src/models/gnn.py::build_gnn_model` (GIN/GAT trunk)
+- Uncertainty toolkit: `../../src/safety/uncertainty.py` (conformal, temperature
+  scaling, ECE, MC-dropout)
 
 ## Integrity guardrail
 
-Pre-declared evaluation: Murcko scaffold cold-splits, >= 5 seeds, 2000-resample
-bootstrap CIs, every endpoint reported, no cherry-picking. We do NOT claim GNN accuracy
-supremacy over the RF descriptor baseline. The defensible wins are low-data-regime
-transfer and decision quality (calibration + measurements-to-decision).
+Pre-registered evaluation: Murcko scaffold cold-splits, 5 seeds, 2000-resample
+bootstrap confidence intervals, every endpoint reported, no cherry-picking. This work
+does not claim graph-model accuracy supremacy over the random-forest descriptor
+baseline; the defensible wins are low-data-regime transfer and decision quality
+(calibration, conformal efficiency, selective prediction).
