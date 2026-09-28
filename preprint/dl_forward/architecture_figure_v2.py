@@ -29,12 +29,11 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 from snptx.viz.theme import (  # noqa: E402
-    BORDER,
     CARD_BG,
     DARK_BG,
     NEON_BLUE,
     NEON_GREY,
-    NEON_PINK,
+    NEON_GREEN,
     NEON_PURPLE,
     NEON_YELLOW,
     TEXT_PRIMARY,
@@ -51,21 +50,25 @@ plt.rcParams.update({
     "text.color": TEXT_PRIMARY,
 })
 
-# Neon house palette (no orange): the star oracle is yellow, the decision engine pink,
-# the interpretability branch purple, and structural/reference elements bright grey.
+# Color identifies a component's role: blue inputs/feedback, yellow learning/calibration,
+# green decisions, purple interpretability, grey baseline/lineage.
 C_SUBSTRATE = NEON_BLUE
 C_ORACLE    = NEON_YELLOW
-C_ENGINE    = NEON_PINK
+C_ENGINE    = NEON_GREEN
 C_SPRT      = NEON_BLUE
 C_CONFORMAL = NEON_YELLOW
 C_ABDUCTIVE = NEON_PURPLE
-C_GONOGO    = NEON_PINK
+C_GONOGO    = NEON_GREEN
+# Subtle green fills so the decisions/outputs role reads clearly, matching the legend.
+FILL_DECISION = (0.223, 1.0, 0.078, 0.07)
+FILL_GONOGO   = (0.223, 1.0, 0.078, 0.16)
 C_ATTN      = NEON_PURPLE
 C_STRUCT    = NEON_GREY
 
 
 def stage(ax, x, y, w, h, title, accent, *, body=None, tag=None,
-          face=CARD_BG, title_size=14, body_size=11, tag_size=9, title_pad=3.2):
+          face=CARD_BG, title_size=14, body_size=11, tag_size=9,
+          title_pad=3.2, tag_pad=2.2):
     """Draw a rounded stage box: accent title, optional body lines and module tag."""
     ax.add_patch(FancyBboxPatch(
         (x, y), w, h, boxstyle="round,pad=0.7,rounding_size=1.8",
@@ -77,7 +80,7 @@ def stage(ax, x, y, w, h, title, accent, *, body=None, tag=None,
         ax.text(cx, y + h - title_pad - 4.6, "\n".join(body), ha="center", va="top",
                 fontsize=body_size, color=TEXT_PRIMARY, linespacing=1.55)
     if tag:
-        ax.text(cx, y + 2.2, tag, ha="center", va="bottom",
+        ax.text(cx, y + tag_pad, tag, ha="center", va="bottom",
                 fontsize=tag_size, style="italic", color=TEXT_SECONDARY)
 
 
@@ -99,47 +102,48 @@ def bracket(ax, pts, color, *, ls="--", lw=1.4, ms=14):
 def build() -> Path:
     fig, ax = plt.subplots(figsize=(16.5, 9.6), constrained_layout=False)
     ax.set_xlim(-2, 172)
-    ax.set_ylim(0, 110)
+    ax.set_ylim(-8, 110)
     ax.axis("off")
     ax.set_title("System architecture: a learned oracle driving defensible decisions",
                  fontsize=16, fontweight="bold", color=TEXT_PRIMARY, pad=12)
 
     # ------------------------------------------------------------------ main row
     # Substrate -> learned oracle -> decision engine -> GO/NO-GO, all on one band.
-    stage(ax, 6, 62, 28, 20, "Substrate", C_SUBSTRATE,
+    stage(ax, 6, 60.5, 28, 23, "Substrate", C_SUBSTRATE,
           body=["TDC ADMET benchmarks", "6 ADMET endpoints", "molecular graphs"],
           tag="adapters/drugcomb.py")
-    stage(ax, 48, 62, 28, 20, "Learned oracle", C_ORACLE,
+    stage(ax, 48, 60.5, 28, 23, "Learned oracle", C_ORACLE,
           body=["multi-task GIN/GINE", "encoder + per-task heads", "K=5 deep ensemble"],
           tag="models/gnn.py")
 
     # Decision-engine container holds the three coupled decisions, stacked and spaced.
-    stage(ax, 90, 50, 42, 38, "Decision engine", C_ENGINE, title_pad=3.0)
-    stage(ax, 93, 72, 36, 8.5, "SPRT · when to stop", C_SPRT,
+    stage(ax, 90, 47.5, 42, 43.5, "Decision engine", C_ENGINE, title_pad=3.0,
+          face=FILL_DECISION)
+    stage(ax, 93, 73.5, 36, 8.5, "SPRT · when to stop", C_SPRT,
           tag="experiment_design.py", face=DARK_BG,
-          title_size=11.5, tag_size=8.5, title_pad=2.4)
-    stage(ax, 93, 62, 36, 8.5, "Conformal + selective", C_CONFORMAL,
+          title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
+    stage(ax, 93, 62.5, 36, 8.5, "Conformal + selective", C_CONFORMAL,
           tag="uncertainty.py", face=DARK_BG,
-          title_size=11.5, tag_size=8.5, title_pad=2.4)
-    stage(ax, 93, 52, 36, 8.5, "Abductive discovery", C_ABDUCTIVE,
+          title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
+    stage(ax, 93, 51.5, 36, 8.5, "Abductive discovery", C_ABDUCTIVE,
           tag="scientific_discovery.py", face=DARK_BG,
-          title_size=11.5, tag_size=8.5, title_pad=2.4)
+          title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
 
-    stage(ax, 140, 62, 24, 20, "GO / NO-GO", C_GONOGO,
+    stage(ax, 140, 60.5, 24, 23, "GO / NO-GO", C_GONOGO,
           body=["calibrated go/no-go", "fewer measurements", "full lineage"],
-          tag="e8_campaign.py")
+          tag="e8_campaign.py", face=FILL_GONOGO)
 
     # Left-to-right pipeline flow (each arrow sits in a clear inter-box gap at y=72).
-    arrow(ax, (34, 72), (48, 72), TEXT_PRIMARY)
-    arrow(ax, (76, 72), (90, 72), TEXT_PRIMARY)
-    arrow(ax, (132, 72), (140, 72), TEXT_PRIMARY)
+    arrow(ax, (34, 72), (48, 72), C_SUBSTRATE)
+    arrow(ax, (76, 72), (90, 72), C_ORACLE)
+    arrow(ax, (132, 72), (140, 72), C_ENGINE)
 
     # ---------------------------------------------- interpretability branch (top)
     # Sits on its own band above the oracle; connects oracle -> attention, then
     # attention -> abductive via an orthogonal bracket routed clear of the engine.
     stage(ax, 46, 90, 40, 9, "GAT attention -> interpretability", C_ATTN,
           tag="attention_attribution.py", face=DARK_BG,
-          title_size=11, tag_size=8.5, title_pad=2.4)
+          title_size=11, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
     arrow(ax, (62, 82), (62, 90), C_ATTN)                      # oracle -> attention
     # attention -> abductive: route down the clear gap between the engine and GO/NO-GO
     # so it never crosses the SPRT / conformal sub-boxes, entering abductive from the right.
@@ -154,12 +158,12 @@ def build() -> Path:
             bbox=dict(facecolor=DARK_BG, edgecolor="none", pad=2))
 
     # ------------------------------------------------ descriptor baseline (comparator)
-    # Demoted RF, parked below the substrate with a dashed comparator link to the
-    # oracle. Kept out of every vertical corridor so nothing overlaps it.
-    stage(ax, 6, 48, 28, 8.5, "Descriptor baseline (RF)", C_STRUCT,
-          tag="Morgan/RDKit · comparator", face=DARK_BG,
-          title_size=11, tag_size=8.5, title_pad=2.4)
-    arrow(ax, (34, 52), (48, 66), C_STRUCT, ls="--", cs="arc3,rad=0.15", lw=1.3, ms=11)
+    # Demoted RF, parked below the substrate with an orthogonal comparator link.
+    stage(ax, 6, 48, 28, 8.5, "Descriptor baseline", C_STRUCT,
+          tag="RF · Morgan/RDKit", face=DARK_BG,
+          title_size=10.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
+    bracket(ax, [(34.7, 52.25), (42, 52.25), (42, 67.5), (48, 67.5)],
+            C_STRUCT, ls="--", lw=1.3, ms=11)
 
     # ----------------------------------------------- training sub-workflow (bottom)
     # How the oracle is built. A left-to-right strip under the pipeline; one arrow
@@ -173,14 +177,15 @@ def build() -> Path:
     ]
     for x, title, accent, tag in subs:
         stage(ax, x, sub_y, sub_w, sub_h, title, accent, tag=tag, face=DARK_BG,
-              title_size=10.5, tag_size=8.2, title_pad=2.4)
+              title_size=9.0 if title == "Temp scale + conformal" else 10.5,
+              tag_size=8.2, title_pad=1.8, tag_pad=1.1)
     for x0 in (30, 62, 94):  # horizontal flow between the four steps
         arrow(ax, (x0, sub_y + sub_h / 2), (x0 + 8, sub_y + sub_h / 2),
               C_STRUCT, lw=1.3, ms=11)
     ax.text(64, sub_y - 2.4, "training sub-workflow  ·  dl_forward/train_multitask_gnn.py",
             ha="center", va="top", fontsize=10, style="italic", color=TEXT_SECONDARY)
     # Strip -> oracle: straight up the empty x=62 corridor into the oracle's base.
-    arrow(ax, (62, sub_y + sub_h), (62, 62), C_ORACLE, lw=1.5, ms=13)
+    arrow(ax, (62, sub_y + sub_h), (62, 60.5), C_ORACLE, lw=1.5, ms=13)
 
     # ----------------------------------------------------------- DuckDB lineage bar
     ax.add_patch(FancyBboxPatch(
@@ -190,8 +195,20 @@ def build() -> Path:
             "DuckDB lineage  ·  every decision traced from task to discovered rule  ·  intelligence/catalog.py",
             ha="center", va="center", fontsize=12.5, color=TEXT_PRIMARY)
     # Dotted drops into the lineage bar from clear corridors only (no box crossings).
-    for x0, y0 in [(100, 50), (152, 62)]:
+    for x0, y0 in [(100, 47.5), (152, 62)]:
         arrow(ax, (x0, y0), (x0, 13), C_STRUCT, ls=":", lw=1.3, ms=11)
+
+    # Keep the role key below the lineage bar, outside every connector route.
+    for x, color, label in [
+        (6, C_SUBSTRATE, "Input + feedback"),
+        (38, C_ORACLE, "Model + calibration"),
+        (70, C_ENGINE, "Decisions + outputs"),
+        (102, C_ATTN, "Interpretability"),
+        (134, C_STRUCT, "Baseline + lineage"),
+    ]:
+        ax.plot([x, x + 4], [-3, -3], color=color, lw=3, solid_capstyle="round")
+        ax.text(x + 5.5, -3, label, ha="left", va="center",
+                fontsize=9.2, color=TEXT_PRIMARY)
 
     out = FIGDIR / "fig0_architecture_v2.png"
     fig.savefig(out, bbox_inches="tight", pad_inches=0.25)
