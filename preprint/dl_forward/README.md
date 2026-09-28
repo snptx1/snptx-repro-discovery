@@ -1,4 +1,4 @@
-# dl_forward — learned representations and calibrated ensemble uncertainty
+# dl_forward - learned representations and calibrated ensemble uncertainty
 
 Companion study to the top-level engine (`../MANUSCRIPT_calibrated_sequential_discovery.md`).
 Where the top-level work uses a descriptor/random-forest oracle, this folder swaps in a

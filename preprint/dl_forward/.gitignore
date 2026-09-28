@@ -1,4 +1,4 @@
-# Large / regenerable state — never commit.
+# Large / regenerable state - never commit.
 cache/
 dryrun/
 artifacts/checkpoints/

@@ -9,7 +9,7 @@ into one autonomous loop:
 
 1. **Measure less.** Wald's Sequential Probability Ratio Test (SPRT) reaches a
    confident go/no-go call with materially fewer measurements than a fixed-sample
-   test — 65 vs 99 at the empirical effect size (34% fewer), 23% fewer on average, at
+   test - 65 vs 99 at the empirical effect size (34% fewer), 23% fewer on average, at
    power 0.85 and Type I 0.043.
 2. **Know what you don't know.** Split-conformal prediction holds its 90% coverage
    target under leakage-controlled (Murcko scaffold) shift (BBB 0.884, hERG 0.869,
@@ -85,14 +85,14 @@ campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store
 
 ## The engine (vendored under `src/`)
 
-- `intelligence/experiment_design.py` — Wald SPRT sequential stopping
-- `safety/uncertainty.py` — split-conformal, temperature scaling / ECE, MC-dropout
-- `intelligence/scientific_discovery.py` — novelty archive + abductive discovery cycle
-- `intelligence/catalog.py` — DuckDB experiment lineage
-- `intelligence/surrogate.py` — GP surrogate + EI/UCB/KG/Thompson acquisition
-- `models/gnn.py` — GIN/GAT graph encoders
-- `adapters/admet.py`, `adapters/drugcomb.py` — TDC ADMET + molecular-graph featurizer
-- `snptx/viz/theme.py` — the visualization theme
+- `intelligence/experiment_design.py` - Wald SPRT sequential stopping
+- `safety/uncertainty.py` - split-conformal, temperature scaling / ECE, MC-dropout
+- `intelligence/scientific_discovery.py` - novelty archive + abductive discovery cycle
+- `intelligence/catalog.py` - DuckDB experiment lineage
+- `intelligence/surrogate.py` - GP surrogate + EI/UCB/KG/Thompson acquisition
+- `models/gnn.py` - GIN/GAT graph encoders
+- `adapters/admet.py`, `adapters/drugcomb.py` - TDC ADMET + molecular-graph featurizer
+- `snptx/viz/theme.py` - the visualization theme
 
 ## Reproducibility invariants
 
@@ -104,4 +104,4 @@ campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).
