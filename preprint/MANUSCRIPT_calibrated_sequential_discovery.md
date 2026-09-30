@@ -1,7 +1,7 @@
 # Knowing what to measure and when to stop: an autonomous decision engine for molecular property discovery
 
 Daniel R. Russell<br>
-Intelligent Systems Research - Bioinformatics, SNPTX<br>
+Autonomous Systems Research - Bioinformatics, SNPTX<br>
 Correspondence: dan@snptx.ai
 
 ## Abstract
