@@ -1,7 +1,7 @@
 # Learned molecular representations with calibrated deep-ensemble uncertainty for label-efficient ADMET decisions
 
 Daniel R. Russell<br>
-Autonomous Systems Research - Bioinformatics, SNPTX<br>
+Autonomous Discovery Systems · Biomedical ML, SNPTX<br>
 Correspondence: dan@snptx.ai
 
 <!--
