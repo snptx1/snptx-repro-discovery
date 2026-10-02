@@ -290,22 +290,30 @@ with known $\sigma$. We test $H_0:\theta=\theta_0$ against $H_1:\theta=\theta_1$
 and $\theta_1-\theta_0$ is the "meaningful effect."
 
 **Per-sample log-likelihood ratio.** With
-$\log f_\theta(x) = -\frac{(x-\theta)^2}{2\sigma^2} + \text{const}$,
 
-$$
-z_i \;=\; \log\frac{f_{\theta_1}(x_i)}{f_{\theta_0}(x_i)}
-\;=\; \frac{1}{2\sigma^2}\big[(x_i-\theta_0)^2-(x_i-\theta_1)^2\big]
-\;=\; \frac{\theta_1-\theta_0}{\sigma^2}\Big(x_i-\frac{\theta_0+\theta_1}{2}\Big).
-$$
+```math
+\log f_\theta(x) = -\frac{(x-\theta)^2}{2\sigma^2} + \text{const},
+```
+
+```math
+\begin{aligned}
+z_i &= \log\frac{f_{\theta_1}(x_i)}{f_{\theta_0}(x_i)} \\
+&= \frac{(x_i-\theta_0)^2-(x_i-\theta_1)^2}{2\sigma^2} \\
+&= \frac{\theta_1-\theta_0}{\sigma^2}\Big(x_i-\frac{\theta_0+\theta_1}{2}\Big).
+\end{aligned}
+```
 
 This is exactly the increment accumulated in `experiment_design.py::SPRT.update`.
 
 **Decision rule.** Let $\Lambda_n=\sum_{i=1}^n z_i$. Continue while $B<\Lambda_n<A$;
 accept $H_1$ once $\Lambda_n\ge A$, accept $H_0$ once $\Lambda_n\le B$, with
 
-$$
-A=\log\frac{1-\beta}{\alpha}, \qquad B=\log\frac{\beta}{1-\alpha},
-$$
+```math
+\begin{aligned}
+A &= \log\frac{1-\beta}{\alpha}, \\
+B &= \log\frac{\beta}{1-\alpha},
+\end{aligned}
+```
 
 the code's `_upper` and `_lower`. Wald's inequalities bound the realized error rates,
 $\alpha'\le \alpha/(1-\beta)$ and $\beta'\le \beta/(1-\alpha)$, hence
@@ -314,13 +322,19 @@ our realized type-I error (0.043) sits below the nominal 0.05.
 
 **Efficiency.** For the same $(\alpha,\beta)$ the fixed-sample size at effect
 $\delta=(\theta_1-\theta_0)/\sigma$ is
-$n_{\text{fix}}=\big((z_{1-\alpha}+z_{1-\beta})/\delta\big)^2$. Using Wald's
-overshoot-free approximation the average sample number is
 
-$$
-E_\theta[N]\;\approx\;\frac{L(\theta)\,B+\big(1-L(\theta)\big)\,A}{E_\theta[z]},
-\qquad E_\theta[z]=\frac{\theta_1-\theta_0}{\sigma^2}\Big(\theta-\frac{\theta_0+\theta_1}{2}\Big),
-$$
+```math
+n_{\text{fix}}=\left(\frac{z_{1-\alpha}+z_{1-\beta}}{\delta}\right)^2.
+```
+
+Using Wald's overshoot-free approximation the average sample number is
+
+```math
+\begin{aligned}
+E_\theta[N] &\approx \frac{L(\theta)\,B+\big(1-L(\theta)\big)\,A}{E_\theta[z]}, \\
+E_\theta[z] &= \frac{\theta_1-\theta_0}{\sigma^2}\Big(\theta-\frac{\theta_0+\theta_1}{2}\Big),
+\end{aligned}
+```
 
 where $L(\theta)=P(\text{accept }H_0\mid\theta)$ is the operating characteristic.
 $E_\theta[z]=0$ at the least-favorable point $\theta=(\theta_0+\theta_1)/2$, where $N$
@@ -336,22 +350,27 @@ the asymptotic bound; overshoot keeps the bounds conservative.
 
 **Construction.** Given a calibration sample $\{(X_i,Y_i)\}_{i=1}^n$ and a
 nonconformity score $s(x,y)$ (we use $s=1-\hat p_y(x)$, one minus the model's
-probability on the true label), compute $s_i=s(X_i,Y_i)$ and the threshold
+probability on the true label), compute $s_i=s(X_i,Y_i)$ and define the rank
 
-$$
-\hat q=\text{the }\big\lceil (n+1)(1-\alpha)\big\rceil\text{-th smallest of }\{s_i\}_{i=1}^n,
-$$
+```math
+k=\big\lceil (n+1)(1-\alpha)\big\rceil.
+```
 
-then predict the set $C(x)=\{y: s(x,y)\le \hat q\}$
+The threshold $\hat q$ is the $k$-th smallest of the calibration scores $\{s_i\}_{i=1}^n$.
+Then predict the set $C(x)=\{y: s(x,y)\le \hat q\}$
 (`safety/uncertainty.py::calibrate_conformal`).
 
 **Finite-sample coverage.** If the $n+1$ scores $s_1,\dots,s_n,s_{n+1}$ are
 exchangeable, the rank of $s_{n+1}$ is uniform on $\{1,\dots,n+1\}$, so
 
-$$
-P\big(Y_{n+1}\in C(X_{n+1})\big)=P\big(s_{n+1}\le\hat q\big)
-\;\ge\;\frac{\lceil (n+1)(1-\alpha)\rceil}{n+1}\;\ge\;1-\alpha,
-$$
+```math
+\begin{aligned}
+P\big(Y_{n+1}\in C(X_{n+1})\big)
+&= P\big(s_{n+1}\le\hat q\big) \\
+&\ge \frac{\lceil (n+1)(1-\alpha)\rceil}{n+1} \\
+&\ge 1-\alpha,
+\end{aligned}
+```
 
 distribution-free (Vovk et al. 2005). At $\alpha=0.10$ this is the 0.90 target of Section 4.2.
 
@@ -366,8 +385,16 @@ conformal (Tibshirani et al. 2019).
 ## A.3 Selective prediction (risk-coverage)
 
 With a confidence score $g(x)=\max_y\hat p_y(x)$, the selective classifier abstains
-when $g(x)<\tau$. Define coverage $\phi(\tau)=P(g(X)\ge\tau)$ and selective risk
-$R(\tau)=E[\ell(\hat f(X),Y)\mid g(X)\ge\tau]$. If $g$ ranks points by their true
+when $g(x)<\tau$. Define coverage and selective risk as
+
+```math
+\begin{aligned}
+\phi(\tau) &= P(g(X)\ge\tau), \\
+R(\tau) &= E[\ell(\hat f(X),Y)\mid g(X)\ge\tau].
+\end{aligned}
+```
+
+If $g$ ranks points by their true
 probability of correctness, $R(\tau)$ is non-increasing as $\tau$ rises (coverage
 falls): the monotone risk-coverage trade-off (El-Yaniv & Wiener 2010). Retained
 accuracy $1-R$ rises from 0.864 at full coverage to 0.94 at coverage 0.70; that is,
@@ -378,9 +405,12 @@ which holds iff $g$ ranks errors better than chance (verified under both splits,
 
 Partitioning predictions into $M$ equal-width confidence bins $\{B_m\}$,
 
-$$
-\text{ECE}=\sum_{m=1}^{M}\frac{|B_m|}{N}\,\big|\mathrm{acc}(B_m)-\mathrm{conf}(B_m)\big|,
-$$
+```math
+\begin{aligned}
+\text{ECE} &= \sum_{m=1}^{M}\frac{|B_m|}{N}\,e_m, \\
+e_m &= \big|\mathrm{acc}(B_m)-\mathrm{conf}(B_m)\big|,
+\end{aligned}
+```
 
 reported at $M{=}10$ (ECE 0.044). Temperature scaling, a single scalar $T$ minimizing
 validation NLL on the logits, is available in `uncertainty.py` for probability
@@ -391,9 +421,9 @@ recalibration.
 For a molecule pair $(i,j)$ with ECFP4 Tanimoto similarity $\text{sim}_{ij}$ and
 property gap $|\Delta Y_{ij}|$,
 
-$$
+```math
 \text{SALI}_{ij}=\frac{|\Delta Y_{ij}|}{1-\text{sim}_{ij}}
-$$
+```
 
 (Guha & Van Drie 2008). Section 4.4 surfaces pairs with $\text{sim}\ge0.70$ and
 $|\Delta Y|\ge2$, excluding $\text{sim}\ge0.999$ (ECFP collisions on non-identical

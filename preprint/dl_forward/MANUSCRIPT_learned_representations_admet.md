@@ -488,9 +488,13 @@ regression endpoint it is mean-squared error on the standardized target
 $\tilde y = (y-\mu_t)/\sigma_t$, with $\mu_t,\sigma_t$ estimated on the training split.
 The multi-task objective is the task-weighted sum
 
-$$
-\mathcal{L}(\theta) = \sum_{t} w_t \, \mathbb{E}_{(x,y)\sim \mathcal{D}_t}\big[\ell_t(h_t(\phi_\theta(x)), y)\big],
-$$
+```math
+\begin{aligned}
+\mathcal{L}(\theta) &= \sum_t w_t\,\mathcal{L}_t(\theta), \\
+\mathcal{L}_t(\theta) &= \mathbb{E}_{(x,y)\sim\mathcal{D}_t}\big[
+    \ell_t(h_t(\phi_\theta(x)),y)\big],
+\end{aligned}
+```
 
 optimized by round-robin task-batch updates so the shared trunk is not dominated by the
 largest endpoint. Standardization puts regression MSE and classification cross-entropy on
@@ -504,7 +508,13 @@ $p^{(k)}(y\mid x)$, the predictive distribution is the mean
 $\bar p(y\mid x) = \frac1K\sum_k p^{(k)}(y\mid x)$. Total predictive uncertainty, the
 entropy $\mathcal{H}[\bar p]$, decomposes into an aleatoric term, the mean of member
 entropies $\frac1K\sum_k \mathcal{H}[p^{(k)}]$, and an epistemic term, the mutual
-information $\mathcal{H}[\bar p] - \frac1K\sum_k \mathcal{H}[p^{(k)}]$, which measures
+information
+
+```math
+\mathcal{H}[\bar p] - \frac1K\sum_k \mathcal{H}[p^{(k)}],
+```
+
+which measures
 member disagreement and vanishes as members agree. The epistemic term is the ensemble's
 signal for distribution shift and is what selective prediction and conformal set size pick
 up on. Empirically this epistemic signal is what buys the ensemble its decision-quality
@@ -537,25 +547,28 @@ $H_0:\theta=\theta_0$ versus $H_1:\theta=\theta_1$ with $\theta_1=$ `MEANINGFUL_
 $=0.30$ in units of $\sigma$ and $\theta_0=0$. After $n$ measurements the log-likelihood
 ratio is
 
-$$
+```math
 \Lambda_n \;=\; \sum_{i=1}^{n} \log\frac{f_{\theta_1}(x_i)}{f_{\theta_0}(x_i)},
-$$
+```
 
 and sampling continues while $B < \Lambda_n < A$, stopping to accept $H_1$ (a GO) when
 $\Lambda_n \ge A$ and to accept $H_0$ (a NO-GO) when $\Lambda_n \le B$. Wald's bounds set the
 thresholds directly from the target error rates $(\alpha,\beta)=(0.05,0.20)$,
 
-$$
-A \;=\; \log\frac{1-\beta}{\alpha}, \qquad B \;=\; \log\frac{\beta}{1-\alpha},
-$$
+```math
+\begin{aligned}
+A &= \log\frac{1-\beta}{\alpha}, \\
+B &= \log\frac{\beta}{1-\alpha},
+\end{aligned}
+```
 
 which control the type-I and type-II error at their nominal levels up to the usual
 overshoot approximation. The efficiency claim is against the fixed-sample test of the same
 $(\alpha,\beta)$ for a one-sided normal mean, whose required size is
 
-$$
+```math
 n_{\text{fixed}} \;=\; \left(\frac{z_{1-\alpha}+z_{1-\beta}}{\theta_1}\right)^{2},
-$$
+```
 
 the grey reference bars in Figure `fig_campaign_efficiency.png`. When the realized effect
 is genuinely at or beyond $\theta_1$ the SPRT's expected sample size is well below
@@ -566,19 +579,22 @@ rather than declaring a premature GO, which is the exception we report rather th
 
 Section 4.5 reports distribution-free coverage under scaffold shift via split-conformal
 prediction (Vovk et al. 2005; Angelopoulos and Bates 2023). On a held-out calibration set
-of size $n$ we compute nonconformity scores $s_i = 1 - \hat p(y_i \mid x_i)$ and take the
-quantile
+of size $n$ we compute nonconformity scores $s_i = 1 - \hat p(y_i \mid x_i)$ and define the
+quantile level
 
-$$
-\hat q \;=\; \text{the } \big\lceil (1-\alpha)(n+1) \big\rceil / n \text{ empirical quantile of } \{s_i\}_{i=1}^{n}.
-$$
+```math
+u=\frac{\big\lceil (1-\alpha)(n+1)\big\rceil}{n}.
+```
+
+The threshold $\hat q$ is the empirical quantile at level $u$ of the calibration
+scores $\{s_i\}_{i=1}^{n}$.
 
 The prediction set $C(x) = \{\,y : 1-\hat p(y\mid x) \le \hat q\,\}$ then satisfies the
 finite-sample marginal guarantee
 
-$$
+```math
 \Pr\big(y_{\text{test}} \in C(x_{\text{test}})\big) \;\ge\; 1-\alpha,
-$$
+```
 
 for exchangeable calibration and test data, with $\alpha=0.10$ (90% target). Because
 validity is guaranteed by construction, the informative quantity is *efficiency*, the mean
@@ -593,10 +609,12 @@ the sharpest of any graph model (§4.5).
 Calibration in §4.3 is scored by the expected calibration error. Partitioning predictions
 into $B$ equal-width confidence bins $\mathcal{B}_1,\dots,\mathcal{B}_B$,
 
-$$
-\mathrm{ECE} \;=\; \sum_{b=1}^{B} \frac{|\mathcal{B}_b|}{N}\,
-    \big|\,\mathrm{acc}(\mathcal{B}_b) - \mathrm{conf}(\mathcal{B}_b)\,\big|,
-$$
+```math
+\begin{aligned}
+\mathrm{ECE} &= \sum_{b=1}^{B}\frac{|\mathcal{B}_b|}{N}\,e_b, \\
+e_b &= \big|\mathrm{acc}(\mathcal{B}_b)-\mathrm{conf}(\mathcal{B}_b)\big|,
+\end{aligned}
+```
 
 where $\mathrm{acc}(\mathcal{B}_b)$ is the empirical accuracy and
 $\mathrm{conf}(\mathcal{B}_b)$ the mean predicted confidence in bin $b$. We reduce
@@ -614,11 +632,13 @@ Selective prediction (El-Yaniv and Wiener 2010; Geifman and El-Yaniv 2017) lets 
 abstain on its least-confident inputs. For a confidence score $g(x)$ and threshold $\tau$,
 coverage and selective risk are
 
-$$
-\mathrm{cov}(\tau) = \Pr\!\big(g(x) \ge \tau\big), \qquad
-\mathrm{risk}(\tau) = \frac{\mathbb{E}\big[\ell(x,y)\,\mathbf{1}\{g(x)\ge\tau\}\big]}
-                            {\mathrm{cov}(\tau)} .
-$$
+```math
+\begin{aligned}
+\mathrm{cov}(\tau) &= \Pr\!\big(g(x)\ge\tau\big), \\
+\mathrm{risk}(\tau) &= \frac{\mathbb{E}\big[\ell(x,y)\,\mathbf{1}\{g(x)\ge\tau\}\big]}
+                            {\mathrm{cov}(\tau)}.
+\end{aligned}
+```
 
 Sweeping $\tau$ traces the risk-coverage curve; we summarize it by the area under the
 risk-coverage curve (AURC, lower is better) and by the selective accuracy at 70% coverage
@@ -635,13 +655,19 @@ $\rho = 0.15$, zero those atoms' 9-dim feature rows, embed the corrupted graph, 
 each masked atom's element from its node embedding with cross-entropy over the atomic-number
 vocabulary $\mathcal{V}$ of the corpus,
 
-$$
-\mathcal{L}_{\text{mask}}(\theta) \;=\; -\,\mathbb{E}_{x}\,\frac{1}{|M(x)|}
-    \sum_{i \in M(x)} \log p_\theta\!\big(z_i \mid \tilde x_{\setminus M}\big),
-\qquad z_i \in \mathcal{V},
-$$
+```math
+\begin{aligned}
+\mathcal{L}_{\text{mask}}(\theta)
+&= -\,\mathbb{E}_{x}\Bigg[
+    \frac{1}{|M(x)|} \\
+&\qquad {}\times \sum_{i\in M(x)}
+    \log p_\theta\!\big(z_i\mid\tilde x_{\setminus M}\big)
+\Bigg],
+\end{aligned}
+```
 
-with the corpus being the union of all six endpoints' training-pool molecules for each seed
+where $z_i\in\mathcal{V}$, with the corpus being the union of all six endpoints'
+training-pool molecules for each seed
 and fraction (no labels, no validation or test scaffolds). The pretrained trunk is then
 fine-tuned under the identical supervised protocol. This is the weakest of the Hu et al.
 objectives (attribute masking without a complementary structural task), and its effect here
