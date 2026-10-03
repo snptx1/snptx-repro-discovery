@@ -184,8 +184,9 @@ versus the 357** a fixed-sample design would require, a **61% saving**, returnin
 association (meta-R2 0.14-0.55): BBB->TPSA, AMES->aromatic-ring count,
 hERG->heavy-atom count, solubility->calc logP, Caco2->HBD, HIA->TPSA. For AMES and
 hERG - endpoints the discovery probe did not cover - the recovered split is a
-descriptor association rather than an established mechanistic driver. The savings
-concentrate where the per-measurement effect is modest; for HIA, whose observed shift
+descriptor association rather than an established mechanistic driver. 
+
+Notably, the savings concentrate where the per-measurement effect is modest; for HIA, whose observed shift
 is large, SPRT matches the fixed-sample budget (33 vs 33). Every decision is
 reproducible and provenance-logged. The campaign timeline, with the SPRT budget
 staying at or below fixed-sample and a running measurements-saved counter, is Figure 9;
