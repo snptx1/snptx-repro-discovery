@@ -220,7 +220,7 @@ regenerate from a tagged commit.
   realized operating characteristics, not only the theoretical bound.
 - One data family per task; multi-assay transfer is future work.
 - Drift monitoring and substructure-level uncertainty attribution did not pass a cheap
-  feasibility probe and are scoped as future work, not claims.
+  feasibility probe and are scoped as additional future work.
 
 ## 7. Conclusion
 
