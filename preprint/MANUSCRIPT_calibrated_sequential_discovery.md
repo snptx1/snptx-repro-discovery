@@ -103,7 +103,7 @@ realized power **0.85** and Type I error **0.043** (Figure 1).
 
 <p align="center"><img src="figures/sequential_preprint/fig1_sprt_efficiency.png" alt="Figure 1" width="519"></p>
 
-<sub><strong>Figure 1.</strong> Sequential probability ratio test versus a fixed-sample z-test. SPRT reaches the correct go/no-go decision using fewer measurements at every effect size; at the empirical operating point it needs 65 versus 99.</sub>
+<sub><strong>Figure 1.</strong> Sequential probability ratio test versus a fixed-sample z-test; SPRT reaches the correct go/no-go decision using fewer measurements at every effect size.</sub>
 
 ### 4.2 Calibrated coverage under scaffold shift
 
