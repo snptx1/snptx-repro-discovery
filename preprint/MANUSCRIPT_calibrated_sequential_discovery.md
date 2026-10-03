@@ -58,8 +58,8 @@ on real ADMET data under leakage-controlled splits.
 
 ## 3. Methods: the engine
 
-The engine is a closed loop with a pluggable oracle `experiment_fn`. Its components,
-all implemented in `src/`, are:
+The engine is a closed loop with a pluggable oracle `experiment_fn` (Figure 0). Its
+components, all implemented in `src/` and cited below by their source module, are:
 
 - **Oracle.** A calibrated property predictor. We use a GIN/GAT graph encoder
   (`src/models/gnn.py`) for deep-learning oracles, and a bootstrap/RF descriptor
@@ -85,14 +85,14 @@ Figure 0 shows the CPU-reproducible campaign's RandomForest descriptor oracle
 and decision flow; the graph encoder is an alternative pluggable oracle, not
 the oracle depicted in this schematic. Its blue, neon-yellow, green, purple,
 and grey components denote inputs/feedback, modeling/calibration,
-decisions/outputs, discovery, and DuckDB lineage, respectively.
+decisions/outputs, discovery, and DuckDB lineage, respectively. Evaluation
+throughout uses Murcko-scaffold cold splits (test scaffolds never seen in
+training), multi-seed repeats, and 2000-resample bootstrap CIs on headline
+metrics.
 
 <p align="center"><img src="figures/sequential_preprint/fig0_architecture.png" alt="Figure 0" width="880"></p>
 
 <sub><strong>Figure 0.</strong> System architecture of the CPU-reproducible sequential campaign. Molecular descriptors feed a RandomForest property oracle with split-conformal calibration; the decision engine combines sequential stopping, conformal uncertainty and selective prediction, and abductive discovery to make traceable go/no-go calls. Blue denotes inputs and feedback, neon yellow the oracle and calibration, green decisions and outputs, purple discovery, and grey DuckDB lineage. Module labels in the schematic (for example "§1 &middot; experiment_design.py") cite the corresponding Appendix A subsections.</sub>
-
-Evaluation uses Murcko-scaffold cold splits (test scaffolds never seen in training),
-multi-seed repeats, and 2000-resample bootstrap CIs on headline metrics.
 
 ## 4. Results
 
