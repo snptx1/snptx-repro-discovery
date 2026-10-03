@@ -138,13 +138,12 @@ structure-property driver on **5 of 5** probed endpoints - the five covered by t
 discovery probe; the campaign in Section 4.6 spans an overlapping six-endpoint set. The
 recovered pairings are BBB -> TPSA (meta-R2 0.30), solubility -> calc logP (0.49),
 HIA -> TPSA (0.37), Caco2 -> HBD (0.55), and a lipophilicity -> calculated-logP pairing
-(0.26) included as a closely related descriptor-endpoint reference rather than an
-independent discovery. The cycle also surfaces **1398** chemically valid
+(0.26). The cycle also surfaces **1398** chemically valid
 structure-property cliffs (Tanimoto 0.70-0.99, |dY| >= 2) - for example, methyl-ester
 chain-length contrasts on solubility and acid/amide contrasts on lipophilicity. Figure 5
 shows dataset lipophilicity extremes as endpoint context, not matched cliff pairs; the
 recovered descriptor-rule cards are in Figure 6; and two illustrative structure-property
-contrasts among similar 2D structures are in Figure 7.
+contrasts among similar 2D structures are shown in Figure 7.
 
 <p align="center"><img src="figures/sequential_preprint/fig6_molecules.png" alt="Figure 5" width="700"></p>
 
