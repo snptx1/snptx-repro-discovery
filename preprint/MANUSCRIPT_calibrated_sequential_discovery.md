@@ -20,10 +20,11 @@ shift, with empirical coverage near the nominal 0.90 target (BBB 0.884, hERG
 wisely: selective prediction lifts retained accuracy from 0.864 to 0.94 at 70%
 coverage under both random and scaffold splits. Wired into a closed loop with a
 pluggable oracle, a novelty archive, an abductive discovery cycle, and DuckDB
-provenance, the engine (built on the SNPTX experimentation layer) runs an end-to-end
-autonomous campaign that makes traceable decisions, recovers the established
-structure-property driver on 5 of 5 ADMET endpoints, and surfaces 1398 interpretable
-structure-property cliffs. All results are reproducible from a tagged commit on CPU.
+provenance, the engine runs an end-to-end autonomous campaign that reaches six
+traceable go/no-go decisions using 140 versus 357 fixed-sample measurements (61%
+fewer); a companion discovery probe recovers an established structure-property driver
+on five of five endpoints and surfaces 1398 interpretable structure-property cliffs.
+All results are reproducible from a tagged commit on CPU.
 
 ## 1. Introduction
 
@@ -71,8 +72,8 @@ all implemented in `src/`, are:
   the first crossing of the log-likelihood-ratio boundaries `log(beta/(1-alpha))` and
   `log((1-beta)/alpha)`.
 - **Surrogate + acquisition** (`src/intelligence/surrogate.py`). A GP (RBF +
-  WhiteKernel) with EI/UCB/Knowledge-Gradient/Thompson acquisition for the value-of-
-  active-learning ablation.
+  WhiteKernel) with EI/UCB/Knowledge-Gradient/Thompson acquisition (Frazier 2018) for
+  the value-of-active-learning ablation.
 - **Novelty + abductive discovery** (`src/intelligence/scientific_discovery.py`). A
   kNN novelty archive and a discovery cycle that detects surprises (|z|>2), proposes
   abductive hypotheses, distills a meta-model, and extracts a symbolic-regression tree
@@ -88,7 +89,7 @@ decisions/outputs, discovery, and DuckDB lineage, respectively.
 
 <p align="center"><img src="figures/sequential_preprint/fig0_architecture.png" alt="Figure 0" width="880"></p>
 
-<sub><strong>Figure 0.</strong> System architecture of the CPU-reproducible sequential campaign. Molecular descriptors feed a RandomForest property oracle with split-conformal calibration; the decision engine combines sequential stopping, conformal uncertainty and selective prediction, and abductive discovery to make traceable go/no-go calls. Blue denotes inputs and feedback, neon yellow the oracle and calibration, green decisions and outputs, purple discovery, and grey DuckDB lineage.</sub>
+<sub><strong>Figure 0.</strong> System architecture of the CPU-reproducible sequential campaign. Molecular descriptors feed a RandomForest property oracle with split-conformal calibration; the decision engine combines sequential stopping, conformal uncertainty and selective prediction, and abductive discovery to make traceable go/no-go calls. Blue denotes inputs and feedback, neon yellow the oracle and calibration, green decisions and outputs, purple discovery, and grey DuckDB lineage. Module labels in the schematic (for example "§1 &middot; experiment_design.py") cite the corresponding Appendix A subsections.</sub>
 
 Evaluation uses Murcko-scaffold cold splits (test scaffolds never seen in training),
 multi-seed repeats, and 2000-resample bootstrap CIs on headline metrics.
@@ -111,69 +112,71 @@ realized power **0.85** and Type I error **0.043** (Figure 1).
 
 Under leakage-controlled scaffold splits, empirical split-conformal coverage is
 **BBB 0.884, hERG 0.869, AMES 0.899** against a nominal 0.90 target; BBB and hERG
-fall below that target. The random-split values are 0.878, 0.909, and 0.897,
-respectively; **ECE is 0.044** (Figures 3 and 4).
+fall below it. The random-split values are 0.878, 0.909, and 0.897, respectively, and
+**ECE is 0.044** (Figures 2 and 3).
 
-### 4.3 Selective prediction
+<p align="center"><img src="figures/sequential_preprint/fig4_conformal_coverage.png" alt="Figure 2" width="640"></p>
 
-Abstaining on the least-confident molecules raises retained accuracy from **0.864** to
-**0.94** at 70% coverage, under both random and scaffold splits (Figure 2).
-
-<p align="center"><img src="figures/sequential_preprint/fig2_selective_prediction.png" alt="Figure 2" width="502"></p>
-
-<sub><strong>Figure 2.</strong> Risk-coverage trade-off. Abstaining on the least-confident molecules lifts retained accuracy from 0.864 to 0.94 at 70% coverage under both random and scaffold splits.</sub>
-
+<sub><strong>Figure 2.</strong> Empirical split-conformal coverage under random and scaffold-cold splits. Scaffold coverage is 0.884 (BBB), 0.869 (hERG), and 0.899 (AMES); the dashed line marks the nominal 0.90 target, which is not a guarantee under shift.</sub>
 
 <p align="center"><img src="figures/sequential_preprint/fig3_calibration_reliability.png" alt="Figure 3" width="407"></p>
 
-<sub><strong>Figure 3.</strong> BBB random-split reliability diagram. Predicted confidence tracks empirical accuracy; expected calibration error is 0.0435 at ten equal-width bins.</sub>
+<sub><strong>Figure 3.</strong> BBB random-split reliability diagram. Predicted confidence tracks empirical accuracy; expected calibration error is 0.0435 over ten equal-width bins.</sub>
+
+### 4.3 Selective prediction
+
+Abstaining on the least-confident molecules raises retained accuracy to **0.94** at 70%
+coverage under both random and scaffold splits, up from a random-split base accuracy of
+**0.864** (the scaffold split starts slightly higher, near 0.884, and reaches the same
+level) (Figure 4).
+
+<p align="center"><img src="figures/sequential_preprint/fig2_selective_prediction.png" alt="Figure 4" width="502"></p>
+
+<sub><strong>Figure 4.</strong> Risk-coverage trade-off. Abstaining on the least-confident molecules lifts retained accuracy to 0.94 at 70% coverage under both random and scaffold splits.</sub>
+
 ### 4.4 Autonomous, interpretable discovery
 
-<p align="center"><img src="figures/sequential_preprint/fig4_conformal_coverage.png" alt="Figure 4" width="640"></p>
+Fed real ADMET descriptors, the abductive discovery cycle recovers an established
+structure-property driver on **5 of 5** probed endpoints - the five covered by the
+discovery probe; the campaign in Section 4.6 spans an overlapping six-endpoint set. The
+recovered pairings are BBB -> TPSA (meta-R2 0.30), solubility -> calc logP (0.49),
+HIA -> TPSA (0.37), Caco2 -> HBD (0.55), and a lipophilicity -> calculated-logP pairing
+(0.26) included as a closely related descriptor-endpoint reference rather than an
+independent discovery. The cycle also surfaces **1398** chemically valid
+structure-property cliffs (Tanimoto 0.70-0.99, |dY| >= 2) - for example, methyl-ester
+chain-length contrasts on solubility and acid/amide contrasts on lipophilicity. Figure 5
+shows dataset lipophilicity extremes as endpoint context, not matched cliff pairs; the
+recovered descriptor-rule cards are in Figure 6; and two illustrative structure-property
+contrasts among similar 2D structures are in Figure 7.
 
-<sub><strong>Figure 4.</strong> Empirical split-conformal coverage under random and scaffold-cold splits. Scaffold coverage is 0.884 (BBB), 0.869 (hERG), and 0.899 (AMES); the dashed line marks the nominal 0.90 target, not a guarantee under shift.</sub>
+<p align="center"><img src="figures/sequential_preprint/fig6_molecules.png" alt="Figure 5" width="700"></p>
 
-Fed real ADMET descriptors, the abductive discovery cycle recovers the established
-structure-property driver on **5 of 5** endpoints: BBB -> TPSA (meta-R2 0.30),
-solubility -> calc logP (0.49), HIA -> TPSA (0.37), Caco2 -> HBD (0.55), and a
-lipophilicity -> calculated-logP pairing (0.26), included as a closely related
-descriptor-endpoint reference rather than an independent discovery. It surfaces
-**1398** chemically valid structure-property cliffs (Tanimoto 0.70-0.99,
-|dY|>=2), for example
-methyl-ester chain-length contrasts on solubility and acid/amide contrasts on
-lipophilicity. Figure 6 shows dataset lipophilicity extremes as endpoint context,
-not matched cliff pairs. The recovered descriptor-rule cards are in Figure 7, and
-two illustrative structure-property contrasts among similar 2D structures are in
-Figure 8.
+<sub><strong>Figure 5.</strong> Illustrative structures at the three lowest and three highest observed values in the lipophilicity dataset. These are endpoint extremes, not matched activity-cliff pairs.</sub>
+
+<p align="center"><img src="figures/sequential_preprint/fig7_rule_cards.png" alt="Figure 6" width="518"></p>
+
+<sub><strong>Figure 6.</strong> Recovered descriptor-rule cards: each row gives a z-scored tree split, fitted branch values, driver, and meta-model fit. The lipophilicity calculated-logP pairing is a closely related descriptor-endpoint reference, not an independent driver discovery.</sub>
+
+<p align="center"><img src="figures/sequential_preprint/fig8_cliff_panel.png" alt="Figure 7" width="533"></p>
+
+<sub><strong>Figure 7.</strong> Two observed property contrasts among similar 2D structures: a carboxylic acid and primary amide on a shared scaffold (lipophilicity Y -1.28 vs +1.96; Morgan Tanimoto 0.901), and C18 versus C6 methyl esters (solubility Y -9.00 vs -1.87; Tanimoto 0.950). These are measured associations, not causal effects.</sub>
 
 ### 4.5 The value of active learning is regime-dependent
 
 Under hardening (K=3 deep-ensemble query-by-committee acquisition vs random, scaffold
 cold splits, 3 seeds, 2000-resample bootstrap CIs), uncertainty-driven acquisition
 beats random *only when the passive baseline is unstable* (solubility: per-seed gap
-+0.276 but bootstrap CI [-0.102, +0.445], not significant) and is significantly
++0.276, but bootstrap CI [-0.102, +0.445], not significant) and is significantly
 negative when the passive baseline is stable (lipophilicity: gap -0.026, CI
 [-0.070, -0.022]). We therefore report active learning as a characterized decision
-rule, not a headline win (Figure 5).
+rule, not a headline win (Figure 8).
 
-<p align="center"><img src="figures/sequential_preprint/fig5_label_efficiency_regime.png" alt="Figure 5" width="700"></p>
+<p align="center"><img src="figures/sequential_preprint/fig5_label_efficiency_regime.png" alt="Figure 8" width="700"></p>
 
-<sub><strong>Figure 5.</strong> Label-efficiency curves. Uncertainty-driven acquisition beats random only when the passive baseline is unstable; the effect is regime-dependent.</sub>
+<sub><strong>Figure 8.</strong> Label-efficiency curves. Uncertainty-driven acquisition beats random only when the passive baseline is unstable; the effect is regime-dependent.</sub>
 
-
-<p align="center"><img src="figures/sequential_preprint/fig6_molecules.png" alt="Figure 6" width="700"></p>
-
-<sub><strong>Figure 6.</strong> Illustrative structures at the three lowest and three highest observed values in the lipophilicity dataset. These are endpoint extremes, not matched activity-cliff pairs.</sub>
 ### 4.6 End-to-end autonomous campaign
 
-<p align="center"><img src="figures/sequential_preprint/fig7_rule_cards.png" alt="Figure 7" width="518"></p>
-
-<sub><strong>Figure 7.</strong> Recovered descriptor-rule cards: each row gives a z-scored tree split, fitted branch values, driver, and meta-model fit. The lipophilicity calculated-logP pairing is a closely related descriptor-endpoint reference, not an independent driver discovery.</sub>
-
-
-<p align="center"><img src="figures/sequential_preprint/fig8_cliff_panel.png" alt="Figure 8" width="533"></p>
-
-<sub><strong>Figure 8.</strong> Two observed property contrasts among similar 2D structures: a carboxylic acid and primary amide on a shared scaffold (lipophilicity Y -1.28 vs +1.96; Morgan Tanimoto 0.901), and C18 versus C6 methyl esters (solubility Y -9.00 vs -1.87; Tanimoto 0.950). These are measured associations, not causal effects.</sub>
 The wired engine runs a closed campaign across six ADMET endpoints (BBB, AMES, hERG,
 solubility, Caco2, HIA). For each it trains a calibrated oracle on a leakage-controlled
 scaffold-cold split, poses an a-priori go/no-go question (is the oracle's top-predicted
@@ -181,22 +184,28 @@ novel-scaffold subgroup shifted from the pool baseline by at least 0.3 sigma?), 
 via SPRT, runs the abductive discovery cycle, and logs the full lineage to DuckDB.
 Across the campaign the engine reaches a confident decision in **140 measurements
 versus the 357** a fixed-sample design would require, a **61% saving**, returning
-**6 GO decisions** (each traced to its calibrated oracle and its recovered rule:
-BBB->TPSA, AMES->aromatic-ring count, hERG->heavy-atom count, solubility->calc logP,
-Caco2->HBD, HIA->TPSA). Every decision is reproducible and provenance-logged. The
-campaign timeline, with the SPRT budget staying below fixed-sample and a running
-measurements-saved counter, is Figure 9; the task-to-oracle-to-decision-to-rule
+**6 GO decisions**, each traced to its calibrated oracle and a recovered descriptor
+association (meta-R2 0.14-0.55): BBB->TPSA, AMES->aromatic-ring count,
+hERG->heavy-atom count, solubility->calc logP, Caco2->HBD, HIA->TPSA. For AMES and
+hERG - endpoints the discovery probe did not cover - the recovered split is a
+descriptor association rather than an established mechanistic driver. The savings
+concentrate where the per-measurement effect is modest; for HIA, whose observed shift
+is large, SPRT matches the fixed-sample budget (33 vs 33). Every decision is
+reproducible and provenance-logged. The campaign timeline, with the SPRT budget
+staying at or below fixed-sample and a running measurements-saved counter, is Figure 9;
+the task-to-oracle-to-decision-to-rule
 lineage graph is Figure 10. The raw provenance is in
 `e8_campaign_lineage.duckdb` and the roll-up in `e8_campaign_results.json`.
 
 <p align="center"><img src="figures/sequential_preprint/fig9_campaign_timeline.png" alt="Figure 9" width="684"></p>
 
-<sub><strong>Figure 9.</strong> End-to-end autonomous campaign timeline. The SPRT budget stays below the fixed-sample requirement, with a running measurements-saved counter (140 versus 357 across six endpoints).</sub>
+<sub><strong>Figure 9.</strong> End-to-end autonomous campaign timeline. The SPRT budget stays at or below the fixed-sample requirement, with a running measurements-saved counter (140 versus 357 across six endpoints).</sub>
 
 
 <p align="center"><img src="figures/sequential_preprint/fig10_lineage_graph.png" alt="Figure 10" width="880"></p>
 
 <sub><strong>Figure 10.</strong> Campaign lineage matrix. Each row connects an endpoint and DuckDB record ID to its oracle check, SPRT decision, measurement budget, and discovered rule.</sub>
+
 ## 5. Reproducibility
 
 Every number regenerates on CPU from the committed probes: `feasibility_and_figures.py`
@@ -273,6 +282,9 @@ debugged, and validated for correctness before inclusion.
     ratio test. *Annals of Mathematical Statistics*, 19(3), 326-339.
 18. Tibshirani, R. J., Foygel Barber, R., Candès, E. & Ramdas, A. (2019). Conformal
     prediction under covariate shift. *NeurIPS*.
+19. Rogers, D. & Hahn, M. (2010). Extended-connectivity fingerprints. *Journal of
+    Chemical Information and Modeling*, 50(5), 742-754.
+20. Frazier, P. I. (2018). A tutorial on Bayesian optimization. *arXiv:1807.02811*.
 
 ---
 
@@ -372,7 +384,7 @@ probability of correctness, $R(\tau)$ is non-increasing as $\tau$ rises (coverag
 falls): the monotone risk-coverage trade-off (El-Yaniv & Wiener 2010). Retained
 accuracy $1-R$ rises from 0.864 at full coverage to 0.94 at coverage 0.70; that is,
 abstaining on the least-confident 30% removes a disproportionate share of errors,
-which holds iff $g$ ranks errors better than chance (verified under both splits, Section 4.3).
+which holds iff $g$ ranks errors better than chance (verified under both splits, Section 4.3). The 0.864 base is the random-split value; the scaffold split starts near 0.884 and reaches the same retained accuracy at 0.70 coverage.
 
 ## A.4 Calibration error (ECE)
 
@@ -388,8 +400,8 @@ recalibration.
 
 ## A.5 Structure-activity landscape index (cliffs)
 
-For a molecule pair $(i,j)$ with ECFP4 Tanimoto similarity $\text{sim}_{ij}$ and
-property gap $|\Delta Y_{ij}|$,
+For a molecule pair $(i,j)$ with ECFP4 (Rogers & Hahn 2010) Tanimoto similarity
+$\text{sim}_{ij}$ and property gap $|\Delta Y_{ij}|$,
 
 $$
 \text{SALI}_{ij}=\frac{|\Delta Y_{ij}|}{1-\text{sim}_{ij}}
