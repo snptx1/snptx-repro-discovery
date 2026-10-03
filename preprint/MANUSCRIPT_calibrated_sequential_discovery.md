@@ -81,14 +81,11 @@ components, all implemented in `src/` and cited below by their source module, ar
 - **Lineage** (`src/intelligence/catalog.py`). A DuckDB experiment catalog storing per-
   decision parameters, metrics, surrogate predictions, and the discovered rule.
 
-Figure 0 shows the CPU-reproducible campaign's RandomForest descriptor oracle
-and decision flow; the graph encoder is an alternative pluggable oracle, not
-the oracle depicted in this schematic. Its blue, neon-yellow, green, purple,
-and grey components denote inputs/feedback, modeling/calibration,
-decisions/outputs, discovery, and DuckDB lineage, respectively. Evaluation
-throughout uses Murcko-scaffold cold splits (test scaffolds never seen in
-training), multi-seed repeats, and 2000-resample bootstrap CIs on headline
-metrics.
+The schematic in Figure 0 depicts the CPU-reproducible campaign's RandomForest
+descriptor oracle and decision flow; the GIN/GAT graph encoder is an alternative
+pluggable oracle, not the one shown. Evaluation throughout uses Murcko-scaffold
+cold splits (test scaffolds never seen in training), multi-seed repeats, and
+2000-resample bootstrap CIs on headline metrics.
 
 <p align="center"><img src="figures/sequential_preprint/fig0_architecture.png" alt="Figure 0" width="880"></p>
 
