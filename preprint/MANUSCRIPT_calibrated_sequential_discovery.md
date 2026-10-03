@@ -31,9 +31,9 @@ All results are reproducible from a tagged commit on CPU.
 Two costs dominate early molecular discovery. The first is measurement: each assay
 consumes material, time, and money, so deciding *how many* molecules to measure before
 committing to a go/no-go call is itself a scientific decision. The second is trust: a
-point prediction with no calibrated uncertainty cannot be safely acted on, especially
-under the distribution shift that is the norm when a program moves into novel chemical
-scaffolds. Most ML-for-chemistry work optimizes predictive accuracy on a fixed test
+point prediction with no calibrated uncertainty cannot be safely acted upon, especially
+under the distribution shift - that's the norm - when a program moves into novel chemical
+scaffolds. Most modern ML-for-chemistry work optimizes predictive accuracy on a fixed test
 set and stops there, leaving both costs unaddressed.
 
 We take the complementary view that discovery is a *sequential decision problem under
@@ -42,8 +42,8 @@ measuring, (ii) reports guaranteed-coverage uncertainty that holds under scaffol
 shift, (iii) abstains on its least-confident cases, and (iv) closes the loop
 autonomously while logging a full provenance trail and producing interpretable,
 checkable structure-property knowledge. We deliberately do not oversell active
-learning: our hardening experiments show its benefit is regime-dependent, and we
-report it as a characterized decision rule rather than a headline.
+learning: our hardening experiments show its benefit is regime-dependent, thus we
+report it as such - a characterized decision rule - rather than a headline.
 
 ## 2. Related work and positioning
 
@@ -51,7 +51,7 @@ Sequential testing (Wald 1945) and Bayesian experimental design (Chaloner &
 Verdinelli 1995; Rainforth et al. 2024) provide the theory for stopping early;
 conformal prediction (Vovk et al.; Angelopoulos & Bates 2023) provides
 distribution-free coverage; selective prediction (El-Yaniv & Wiener 2010) provides a
-principled abstain rule. Our contribution is not a new estimator but a *wiring*: we
+principled abstain rule. Our contribution isn't a new estimator but a *wiring*: we
 compose these primitives around a molecular-graph oracle into an autonomous engine
 whose decisions are calibrated, cheap, and traceable, and we validate each primitive
 on real ADMET data under leakage-controlled splits.
