@@ -101,7 +101,7 @@ yellow for learned modeling and calibration, green for decisions and outputs,
 purple for interpretability, and grey for the descriptor baseline and lineage.
 The subsections below detail each block.
 
-<p align="center"><img src="figures/fig0_architecture_v2.png" alt="Figure 0" width="700"></p>
+<p align="center"><img src="figures/fig0_architecture_v2.png" alt="Figure 0" width="800"></p>
 
 <sub><strong>Figure 0.</strong> System schematic. Molecular graphs feed the learned multi-task ensemble oracle; the random forest sits beside it as an explicit descriptor comparator; the calibrated decision engine (SPRT, conformal and selective prediction, abductive discovery) turns the oracle's uncertainty into a traceable go/no-go call, with every step logged to a DuckDB lineage store.</sub>
 
