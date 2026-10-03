@@ -151,11 +151,11 @@ contrasts among similar 2D structures are shown in Figure 7.
 
 <p align="center"><img src="figures/sequential_preprint/fig7_rule_cards.png" alt="Figure 6" width="518"></p>
 
-<sub><strong>Figure 6.</strong> Recovered descriptor-rule cards: each row gives a z-scored tree split, fitted branch values, driver, and meta-model fit. The lipophilicity calculated-logP pairing is a closely related descriptor-endpoint reference, not an independent driver discovery.</sub>
+<sub><strong>Figure 6.</strong> Recovered descriptor-rule cards: each row gives a z-scored tree split, fitted branch values, driver, and meta-model fit. The lipophilicity calculated-logP pairing is a closely related descriptor-endpoint reference.</sub>
 
 <p align="center"><img src="figures/sequential_preprint/fig8_cliff_panel.png" alt="Figure 7" width="533"></p>
 
-<sub><strong>Figure 7.</strong> Two observed property contrasts among similar 2D structures: a carboxylic acid and primary amide on a shared scaffold (lipophilicity Y -1.28 vs +1.96; Morgan Tanimoto 0.901), and C18 versus C6 methyl esters (solubility Y -9.00 vs -1.87; Tanimoto 0.950). These are measured associations, not causal effects.</sub>
+<sub><strong>Figure 7.</strong> Two observed property contrasts among similar 2D structures: a carboxylic acid and primary amide on a shared scaffold (lipophilicity Y -1.28 vs +1.96; Morgan Tanimoto 0.901), and C18 versus C6 methyl esters (solubility Y -9.00 vs -1.87; Tanimoto 0.950). These are measured associations as opposed to causal effects.</sub>
 
 ### 4.5 The value of active learning is regime-dependent
 
@@ -164,8 +164,8 @@ cold splits, 3 seeds, 2000-resample bootstrap CIs), uncertainty-driven acquisiti
 beats random *only when the passive baseline is unstable* (solubility: per-seed gap
 +0.276, but bootstrap CI [-0.102, +0.445], not significant) and is significantly
 negative when the passive baseline is stable (lipophilicity: gap -0.026, CI
-[-0.070, -0.022]). We therefore report active learning as a characterized decision
-rule, not a headline win (Figure 8).
+[-0.070, -0.022]). In this instance, active learning is best categorized as a characterized decision
+rule (Figure 8).
 
 <p align="center"><img src="figures/sequential_preprint/fig5_label_efficiency_regime.png" alt="Figure 8" width="700"></p>
 
