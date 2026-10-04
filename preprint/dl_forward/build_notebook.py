@@ -242,14 +242,17 @@ mean ± sample s.d. over seeds, with the number of seeds favoring one condition.
 seeds a single cell is underpowered, so consistency of direction is read alongside the mean.
 The single-split uncertainty results carry no seed-level error bars.
 
-| group | setting | value |
-|---|---|---|
-| Encoder | GIN layers / hidden width / pooling | 4 / 128 / sum |
-| | dropout / DropEdge / PairNorm scale | 0.3 / 0.1 / 1.0 |
-| Optimization | optimizer | Adam, learning rate 5e-4, weight decay 5e-4, batch 128, 150 epochs |
-| Ensemble | members / calibration | 5 single-task GINs / per-member temperature scaling |
-| Decision metrics | ECE bins / conformal target / selective point | 10 / 90% / 70% coverage |
-| SPRT | $\alpha$ / $\beta$ / design effect / subgroup | 0.05 / 0.20 / 0.30 s.d. / top 30% |
+<table style="margin-left:0; margin-right:auto;">
+<thead><tr><th style="text-align:left">group</th><th style="text-align:left">setting</th><th style="text-align:left">value</th></tr></thead>
+<tbody>
+<tr><td style="text-align:left">Encoder</td><td style="text-align:left">GIN layers / hidden width / pooling</td><td style="text-align:left">4 / 128 / sum</td></tr>
+<tr><td style="text-align:left"></td><td style="text-align:left">dropout / DropEdge / PairNorm scale</td><td style="text-align:left">0.3 / 0.1 / 1.0</td></tr>
+<tr><td style="text-align:left">Optimization</td><td style="text-align:left">optimizer</td><td style="text-align:left">Adam, learning rate 5e-4, weight decay 5e-4, batch 128, 150 epochs</td></tr>
+<tr><td style="text-align:left">Ensemble</td><td style="text-align:left">members / calibration</td><td style="text-align:left">5 single-task GINs / per-member temperature scaling</td></tr>
+<tr><td style="text-align:left">Decision metrics</td><td style="text-align:left">ECE bins / conformal target / selective point</td><td style="text-align:left">10 / 90% / 70% coverage</td></tr>
+<tr><td style="text-align:left">SPRT</td><td style="text-align:left">$\alpha$ / $\beta$ / design effect / subgroup</td><td style="text-align:left">0.05 / 0.20 / 0.30 s.d. / top 30%</td></tr>
+</tbody>
+</table>
 '''))
 
 CELLS.append(md(r'''
