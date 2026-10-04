@@ -1,12 +1,12 @@
 """Generate the revised system-architecture schematic (fig0 v2) for the DL-forward study.
 
 Non-destructive companion to `architecture_figure.py`. This version re-centres the
-diagram on the *learned* oracle (a multi-task GIN/GINE encoder plus a deep ensemble),
-demotes the random forest to an explicit descriptor baseline, exposes the training
-sub-workflow (graph featurizer -> multi-task GNN -> deep ensemble -> temperature
-scaling / conformal), and adds an attention -> interpretability branch feeding the
-abductive-discovery box. The decision engine, DuckDB lineage and feedback loop are
-unchanged from the original.
+diagram on the *learned* oracle (a K=5 deep ensemble of temperature-scaled single-task GIN
+members), demotes the random forest to an explicit descriptor baseline, exposes the
+model-building sub-workflow (graph featurizer -> GIN encoder, trained single- and
+multi-task for the transfer study -> deep ensemble -> temperature scaling / conformal),
+and shows the GAT attention probe as a separate model trained on the same graphs. The
+abductive-discovery component belongs to the companion engine and is not re-run here.
 
 CPU-only, no data. Figure -> preprint/figures/fig0_architecture_v2.png.
 """
@@ -24,7 +24,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch  # noqa: E402
 from matplotlib.path import Path as MPath  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]
+ROOT = next(p for p in HERE.parents if (p / "src").is_dir())  # repo root (public or private layout)
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -113,7 +113,7 @@ def build() -> Path:
           body=["TDC ADMET benchmarks", "6 ADMET endpoints", "molecular graphs"],
           tag="adapters/drugcomb.py")
     stage(ax, 48, 60.5, 28, 23, "Learned oracle", C_ORACLE,
-          body=["multi-task GIN/GINE", "encoder + per-task heads", "K=5 deep ensemble"],
+          body=["K=5 deep ensemble", "single-task GIN members", "temperature-scaled"],
           tag="models/gnn.py")
 
     # Decision-engine container holds the three coupled decisions, stacked and spaced.
@@ -126,28 +126,26 @@ def build() -> Path:
           tag="uncertainty.py", face=DARK_BG,
           title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
     stage(ax, 93, 51.5, 36, 8.5, "Abductive discovery", C_ABDUCTIVE,
-          tag="scientific_discovery.py", face=DARK_BG,
+          tag="scientific_discovery.py · not re-run here", face=DARK_BG,
           title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
 
     stage(ax, 140, 60.5, 24, 23, "GO / NO-GO", C_GONOGO,
-          body=["calibrated go/no-go", "fewer measurements", "full lineage"],
-          tag="e8_campaign.py", face=FILL_GONOGO)
+          body=["calibrated go/no-go", "sequential stopping", "full lineage"],
+          tag="e8_campaign_learned.py", face=FILL_GONOGO)
 
     # Left-to-right pipeline flow (each arrow sits in a clear inter-box gap at y=72).
     arrow(ax, (34, 72), (48, 72), C_SUBSTRATE)
     arrow(ax, (76, 72), (90, 72), C_ORACLE)
     arrow(ax, (132, 72), (140, 72), C_ENGINE)
 
-    # ---------------------------------------------- interpretability branch (top)
-    # Sits on its own band above the oracle; connects oracle -> attention, then
-    # attention -> abductive via an orthogonal bracket routed clear of the engine.
-    stage(ax, 46, 90, 40, 9, "GAT attention -> interpretability", C_ATTN,
-          tag="attention_attribution.py", face=DARK_BG,
+    # ---------------------------------------------- interpretability probe (top)
+    # A separate GAT trained on the same molecular graphs; its attention is tested
+    # against a descriptor atom-salience rule (a negative result). Fed from the substrate
+    # through a corridor clear of the active-learning bracket at x=20.
+    stage(ax, 46, 90, 40, 9, "GAT attention probe", C_ATTN,
+          tag="attention_attribution.py · negative result", face=DARK_BG,
           title_size=11, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
-    arrow(ax, (62, 82), (62, 90), C_ATTN)                      # oracle -> attention
-    # attention -> abductive: route down the clear gap between the engine and GO/NO-GO
-    # so it never crosses the SPRT / conformal sub-boxes, entering abductive from the right.
-    bracket(ax, [(86, 94.5), (136, 94.5), (136, 56), (129, 56)], C_ATTN, ls="--")
+    bracket(ax, [(28, 83.5), (28, 94.5), (46, 94.5)], C_ATTN, ls="--")
 
     # ----------------------------------------------- active-learning loop (topmost)
     # A dashed bracket from GO/NO-GO back to the substrate, staggered above the
@@ -170,9 +168,9 @@ def build() -> Path:
     # rises straight into the oracle in an otherwise empty corridor at x=62.
     sub_y, sub_h, sub_w = 26, 9, 24
     subs = [
-        (6, "Graph featurizer", C_SUBSTRATE, "9-dim nodes · 3-dim edges"),
-        (38, "Multi-task GNN", C_ORACLE, "shared trunk · mixed heads"),
-        (70, "Deep ensemble", C_ORACLE, "K init-seed members"),
+        (6, "Graph featurizer", C_SUBSTRATE, "9-dim atoms · bond graph"),
+        (38, "GIN encoder", C_ORACLE, "single- and multi-task"),
+        (70, "Deep ensemble", C_ORACLE, "K=5 single-task members"),
         (102, "Temp scale + conformal", C_ORACLE, "calibrate · 90% sets"),
     ]
     for x, title, accent, tag in subs:
@@ -182,8 +180,8 @@ def build() -> Path:
     for x0 in (30, 62, 94):  # horizontal flow between the four steps
         arrow(ax, (x0, sub_y + sub_h / 2), (x0 + 8, sub_y + sub_h / 2),
               C_STRUCT, lw=1.3, ms=11)
-    ax.text(64, sub_y - 2.4, "training sub-workflow  ·  dl_forward/train_multitask_gnn.py",
-            ha="center", va="top", fontsize=10, style="italic", color=TEXT_SECONDARY)
+    ax.text(6.5, sub_y - 2.4, "model-building sub-workflow  ·  train_multitask_gnn.py  ·  make_ensemble_uncertainty.py",
+            ha="left", va="top", fontsize=10, style="italic", color=TEXT_SECONDARY)
     # Strip -> oracle: straight up the empty x=62 corridor into the oracle's base.
     arrow(ax, (62, sub_y + sub_h), (62, 60.5), C_ORACLE, lw=1.5, ms=13)
 
@@ -192,7 +190,7 @@ def build() -> Path:
         (6, 4), 158, 9, boxstyle="round,pad=0.7,rounding_size=1.8",
         linewidth=1.4, edgecolor=C_STRUCT, facecolor=CARD_BG))
     ax.text(85, 8.5,
-            "DuckDB lineage  ·  every decision traced from task to discovered rule  ·  intelligence/catalog.py",
+            "DuckDB lineage  ·  every decision traced from task to oracle to SPRT verdict  ·  intelligence/catalog.py",
             ha="center", va="center", fontsize=12.5, color=TEXT_PRIMARY)
     # Dotted drops into the lineage bar from clear corridors only (no box crossings).
     for x0, y0 in [(100, 47.5), (152, 62)]:

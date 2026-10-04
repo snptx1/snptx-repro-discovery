@@ -1,0 +1,130 @@
+{
+  "study": "cross-endpoint structural overlap under per-endpoint scaffold splits",
+  "generated_at": "2026-10-04T16:21:33.179364+00:00",
+  "definition": "fraction of a target endpoint's test molecules whose Murcko scaffold (or canonical SMILES) appears in any other endpoint's training set at the same seed and training fraction; mean over seeds",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "n_molecules": {
+    "bbb": 2030,
+    "ames": 7278,
+    "herg": 655,
+    "hia": 578,
+    "solubility": 9982,
+    "caco2": 910
+  },
+  "results": {
+    "bbb": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.059,
+        "test_molecule_seen_mean": 0.018
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.171,
+        "test_molecule_seen_mean": 0.044
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.266,
+        "test_molecule_seen_mean": 0.08
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.469,
+        "test_molecule_seen_mean": 0.176
+      }
+    },
+    "ames": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.136,
+        "test_molecule_seen_mean": 0.038
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.317,
+        "test_molecule_seen_mean": 0.049
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.555,
+        "test_molecule_seen_mean": 0.134
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.653,
+        "test_molecule_seen_mean": 0.209
+      }
+    },
+    "herg": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.036,
+        "test_molecule_seen_mean": 0.013
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.114,
+        "test_molecule_seen_mean": 0.036
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.251,
+        "test_molecule_seen_mean": 0.058
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.379,
+        "test_molecule_seen_mean": 0.095
+      }
+    },
+    "hia": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.083,
+        "test_molecule_seen_mean": 0.026
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.2,
+        "test_molecule_seen_mean": 0.074
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.335,
+        "test_molecule_seen_mean": 0.136
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.497,
+        "test_molecule_seen_mean": 0.225
+      }
+    },
+    "solubility": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.071,
+        "test_molecule_seen_mean": 0.008
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.144,
+        "test_molecule_seen_mean": 0.025
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.277,
+        "test_molecule_seen_mean": 0.06
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.427,
+        "test_molecule_seen_mean": 0.109
+      }
+    },
+    "caco2": {
+      "0.10": {
+        "test_scaffold_seen_mean": 0.085,
+        "test_molecule_seen_mean": 0.023
+      },
+      "0.25": {
+        "test_scaffold_seen_mean": 0.157,
+        "test_molecule_seen_mean": 0.062
+      },
+      "0.50": {
+        "test_scaffold_seen_mean": 0.252,
+        "test_molecule_seen_mean": 0.097
+      },
+      "1.00": {
+        "test_scaffold_seen_mean": 0.393,
+        "test_molecule_seen_mean": 0.187
+      }
+    }
+  }
+}

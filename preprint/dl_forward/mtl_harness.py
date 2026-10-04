@@ -28,7 +28,7 @@ import numpy as np
 warnings.filterwarnings("ignore")
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]  # snptx-core
+ROOT = next(p for p in HERE.parents if (p / "src").is_dir())  # repo root (public or private layout)
 PREPRINT = HERE.parent
 CACHE = HERE / "cache"
 CACHE.mkdir(exist_ok=True)
@@ -145,6 +145,8 @@ def load_endpoint(key: str, *, limit: int | None = None) -> EndpointData:
     log(f"  [{key}] featurizing {ep.pretty} ...")
     adapter = ADMETAdapter(raw_dir=str(ROOT / "data" / "raw" / "admet"))
     df = adapter.build(key, split="all")
+    # The featurizer only needs its raw directory to exist (it reads no DrugComb files here).
+    (ROOT / "data" / "raw" / "drugcomb").mkdir(parents=True, exist_ok=True)
     featurizer = DrugCombAdapter(raw_dir=str(ROOT / "data" / "raw" / "drugcomb"))
 
     graphs, descs, ys, scafs = [], [], [], []

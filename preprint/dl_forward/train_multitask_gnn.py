@@ -9,9 +9,9 @@ Outputs (non-destructive) under dl_forward/artifacts/:
 
 Usage:
     # tiny CPU plumbing check (no GPU):
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/train_multitask_gnn.py --smoke
+    PYTHONPATH=src:. python preprint/dl_forward/train_multitask_gnn.py --smoke
     # full A10G run (HITL-gated):
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/train_multitask_gnn.py
+    PYTHONPATH=src:. python preprint/dl_forward/train_multitask_gnn.py
 """
 
 from __future__ import annotations

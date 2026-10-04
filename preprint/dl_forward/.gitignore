@@ -15,5 +15,5 @@ __pycache__/
 #   artifacts/multitask_metrics.json, artifacts/learning_curves.npz,
 #   artifacts/ensemble_uncertainty.json, artifacts/ensemble_predictions.npz,
 #   figures/*.png
-# The DuckDB lineage store (artifacts/*.duckdb) is regenerable via `make campaign`;
+# The DuckDB lineage store (artifacts/*.duckdb) is regenerable via `python preprint/dl_forward/e8_campaign_learned.py`;
 # campaign_learned.json records its path and per-endpoint experiment IDs instead.

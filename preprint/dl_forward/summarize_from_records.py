@@ -7,7 +7,7 @@ Two uses:
      without waiting for the whole run.
 
 Usage:
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/summarize_from_records.py
+    PYTHONPATH=src:. python preprint/dl_forward/summarize_from_records.py
 """
 
 from __future__ import annotations

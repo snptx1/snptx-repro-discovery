@@ -1,8 +1,8 @@
 """Learned-oracle decision campaign (AGENT_09 Pillar-2 -> decisions).
 
-Non-destructive companion to `pilot_phd/preprint/e8_campaign.py`. That campaign drives the
+Non-destructive companion to `preprint/e8_campaign.py`. That campaign drives the
 SPRT go/no-go loop with a random-forest descriptor oracle. Here we swap in the *learned*
-oracle -- the K=5 deep-ensemble graph model from `make_ensemble_uncertainty.py` -- and run
+oracle -- the K=5 deep ensemble of single-task GIN members from `make_ensemble_uncertainty.py` -- and run
 the identical decision logic, so the two are directly comparable.
 
 The SPRT step is oracle-agnostic: it needs only a per-molecule ranking signal (here the
@@ -22,7 +22,7 @@ Output (non-destructive) under dl_forward/artifacts/:
       go/no-go call is traceable from task to decision.
 
 Usage:
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/e8_campaign_learned.py
+    PYTHONPATH=src:. python preprint/dl_forward/e8_campaign_learned.py
 """
 
 from __future__ import annotations
@@ -38,8 +38,9 @@ from scipy.stats import norm
 
 HERE = Path(__file__).resolve().parent
 ART = HERE / "artifacts"
-ROOT = HERE.parents[2]  # snptx-core
+ROOT = next(p for p in HERE.parents if (p / "src").is_dir())  # repo root (public or private layout)
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from src.intelligence.catalog import ExperimentCatalog  # noqa: E402
 from src.intelligence.experiment_design import SPRT  # noqa: E402
@@ -165,7 +166,7 @@ def main() -> None:
     payload = {
         "study": "AGENT_09 learned-oracle decision campaign",
         "generated_at": datetime.now(UTC).isoformat(),
-        "oracle": "K=5 deep ensemble (multi-task graph stack)",
+        "oracle": "K=5 deep ensemble (single-task GIN members, temperature-scaled)",
         "sprt": {"alpha": ALPHA, "beta": BETA, "meaningful_effect_sigma": MEANINGFUL_EFFECT,
                  "top_fraction": TOPFRAC},
         "lineage_duckdb": str(DB_PATH.relative_to(ROOT)),

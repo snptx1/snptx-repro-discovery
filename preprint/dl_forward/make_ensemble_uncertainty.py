@@ -21,8 +21,8 @@ Outputs (non-destructive) under dl_forward/artifacts/:
       oracle analogue of conformal_selective_real.npz).
 
 Usage:
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/make_ensemble_uncertainty.py --smoke
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/make_ensemble_uncertainty.py   # GPU, HITL-gated
+    PYTHONPATH=src:. python preprint/dl_forward/make_ensemble_uncertainty.py --smoke
+    PYTHONPATH=src:. python preprint/dl_forward/make_ensemble_uncertainty.py   # GPU, HITL-gated
 """
 
 from __future__ import annotations

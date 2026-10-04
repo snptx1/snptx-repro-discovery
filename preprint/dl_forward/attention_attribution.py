@@ -26,8 +26,8 @@ Outputs (non-destructive) under dl_forward/artifacts/:
     - attention_nodes.npz        : flattened attention scores + salient labels per endpoint.
 
 Usage:
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/attention_attribution.py --smoke
-    PYTHONPATH=src:. python pilot_phd/preprint/dl_forward/attention_attribution.py   # GPU
+    PYTHONPATH=src:. python preprint/dl_forward/attention_attribution.py --smoke
+    PYTHONPATH=src:. python preprint/dl_forward/attention_attribution.py   # GPU
 """
 
 from __future__ import annotations
