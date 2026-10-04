@@ -218,7 +218,7 @@ def fig_calibration_and_selective(bbb) -> dict:
     ax.set_xlabel("Predicted confidence"); ax.set_ylabel("Empirical accuracy")
     ax.set_title("Calibration reliability (BBB, scaffold-aware)")
     ax.legend(frameon=False, loc="upper left")
-    fig.savefig(FIGDIR / "fig4_calibration_reliability.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig3_calibration_reliability.png"); plt.close(fig)
 
     # selective prediction risk-coverage
     cr, ar = risk_coverage(pt, bbb["y"][te].astype(int))
@@ -231,7 +231,7 @@ def fig_calibration_and_selective(bbb) -> dict:
     ax.set_ylabel("Accuracy on retained set")
     ax.set_title("Selective prediction: abstaining raises retained accuracy")
     ax.legend(frameon=False)
-    fig.savefig(FIGDIR / "fig5_selective_prediction.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig4_selective_prediction.png"); plt.close(fig)
 
     return {"ece": round(ece, 4), "conformal_target": 1 - alpha,
             "coverage_random_split": round(cov_rand, 3),
@@ -273,7 +273,7 @@ def fig_coverage_across_tasks(task_data: dict) -> dict:
     ax.set_ylim(0.6, 1.0); ax.set_ylabel("Empirical coverage")
     ax.set_title("Conformal coverage holds under leakage-controlled shift")
     ax.legend(frameon=False, ncol=3, fontsize=8.5)
-    fig.savefig(FIGDIR / "fig3_conformal_coverage.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig2_conformal_coverage.png"); plt.close(fig)
     return {"tasks": labels, "coverage_random": [round(c, 3) for c in covr],
             "coverage_scaffold": [round(c, 3) for c in covs]}
 
@@ -300,7 +300,7 @@ def fig_label_efficiency_regime() -> dict:
         ax.axhline(0, color=BORDER, lw=0.8, alpha=0.6)
     axes[0].set_ylabel("held-out scaffold $R^2$"); axes[0].legend(frameon=False, loc="lower right")
     fig.suptitle("Active acquisition helps only when the passive baseline is unstable", fontsize=11)
-    fig.savefig(FIGDIR / "fig6_label_efficiency_regime.png"); plt.close(fig)
+    fig.savefig(FIGDIR / "fig8_label_efficiency_regime.png"); plt.close(fig)
     return {"source": "g1_harden_curves.npz"}
 
 
@@ -317,7 +317,7 @@ def fig_molecules(data) -> dict:
     opts.setBackgroundColour(hex_to_rgba(DARK_BG))
     img = Draw.MolsToGridImage(mols, molsPerRow=3, subImgSize=(260, 200),
                                legends=legs, drawOptions=opts)
-    img.save(str(FIGDIR / "fig2_molecules.png"))
+    img.save(str(FIGDIR / "fig5_molecules.png"))
     return {"n_shown": len(mols), "range": [round(float(data["y"][order[0]]), 2),
                                             round(float(data["y"][order[-1]]), 2)]}
 

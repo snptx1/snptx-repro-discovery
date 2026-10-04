@@ -3,13 +3,13 @@
 Reads the confirmed discovery results (``e7_discovery_results.json``) and renders
 two publication figures from them (no recompute, deterministic):
 
-  fig7_rule_cards.png   the abductive driver table as human-readable rule cards,
+  fig6_rule_cards.png   the abductive driver table as human-readable rule cards,
                         one per ADMET endpoint (recovered structure-property driver,
                         symbolic-tree threshold, distilled meta-model R2). The
                         manuscript leads with BBB / solubility / HIA / Caco2; the
                         semi-circular lipophilicity card is drawn muted as a labelled
                         reference.
-  fig8_cliff_panel.png  annotated structure-property cliffs: matched molecule pairs
+  fig7_cliff_panel.png  annotated structure-property cliffs: matched molecule pairs
                         (high Tanimoto, large property gap) drawn side by side with
                         the single change highlighted by the delta-property.
 
@@ -144,9 +144,9 @@ def render_rule_cards(res: dict) -> None:
              "*semi-circular reference: the lipophilicity driver is calculated logP, "
              "itself a descriptor; shown muted.",
              ha="center", fontsize=8, color=GREY)
-    fig.savefig(FIGDIR / "fig7_rule_cards.png", bbox_inches="tight")
+    fig.savefig(FIGDIR / "fig6_rule_cards.png", bbox_inches="tight")
     plt.close(fig)
-    log(f"  wrote {FIGDIR / 'fig7_rule_cards.png'}")
+    log(f"  wrote {FIGDIR / 'fig6_rule_cards.png'}")
 
 
 # ---------------------------------------------------------------------------
@@ -200,9 +200,9 @@ def render_cliff_panel(res: dict) -> None:
             fontsize=11, fontweight="bold", color=ORANGE,
             bbox=dict(boxstyle="round,pad=0.35", fc=hex_to_rgba(ORANGE, 0.14), ec=ORANGE))
 
-    fig.savefig(FIGDIR / "fig8_cliff_panel.png", bbox_inches="tight")
+    fig.savefig(FIGDIR / "fig7_cliff_panel.png", bbox_inches="tight")
     plt.close(fig)
-    log(f"  wrote {FIGDIR / 'fig8_cliff_panel.png'}")
+    log(f"  wrote {FIGDIR / 'fig7_cliff_panel.png'}")
 
 
 def main() -> int:

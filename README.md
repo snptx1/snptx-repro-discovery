@@ -8,21 +8,26 @@ The engine turns ADMET property discovery into three coupled decisions and wires
 into one autonomous loop:
 
 1. **Measure less.** Wald's Sequential Probability Ratio Test (SPRT) reaches a
-   confident go/no-go call with materially fewer measurements than a fixed-sample
-   test - 65 vs 99 at the empirical effect size (34% fewer), 23% fewer on average, at
-   power 0.85 and Type I 0.043.
-2. **Know what you don't know.** Split-conformal prediction holds its 90% coverage
-   target under leakage-controlled (Murcko scaffold) shift (BBB 0.884, hERG 0.869,
-   AMES 0.899; ECE 0.044).
+   go/no-go call at matched nominal error rates with materially fewer measurements
+   than a fixed-sample test - 65 vs 99 at the empirical operating point (34% fewer),
+   23% fewer on average, with mean realized power 0.85 and Type I 0.043 across the
+   effect-size sweep.
+2. **Know what you don't know.** Split-conformal prediction is evaluated under
+   leakage-controlled (Murcko scaffold) shift; empirical coverage sits near, and for
+   two of three endpoints just below, the 90% target (BBB 0.884, hERG 0.869,
+   AMES 0.899; BBB random-split ECE 0.044). Coverage is guaranteed only under
+   exchangeability, which scaffold shift breaks, so these are measured diagnostics.
 3. **Abstain wisely.** Selective prediction lifts retained accuracy from 0.864 to 0.94
    at 70% coverage, under both random and scaffold splits.
 
 Wired together with a pluggable oracle, a novelty archive, an abductive discovery
 cycle, and DuckDB provenance, the engine runs an **end-to-end autonomous campaign**
 that reaches 6 go/no-go decisions using **140 vs 357** fixed-sample measurements
-(**61% fewer**), recovers the established structure-property driver on **5 of 5** ADMET
-endpoints, and surfaces **1398** interpretable structure-property cliffs. Every
-decision is traced from task to discovered rule.
+(**61% fewer**), recovers the established structure-property driver on **5 of 5**
+probed ADMET endpoints (four independent drivers plus one closely related
+descriptor-endpoint reference), and surfaces **1398** interpretable structure-property
+cliffs on its two regression endpoints. Every decision is traced from task to
+discovered rule.
 
 ## To be fair
 
@@ -47,10 +52,11 @@ deliberate:
   development we trained deep-ensemble GIN graph-neural-network oracles on the GPU
   (~1 hr per run on one A10G) to test an uncertainty-driven *label-acquisition*
   headline. Under hardening (scaffold cold splits, 3 seeds, 2000x bootstrap CIs) that
-  headline was **refuted** and demoted to a characterized regime law (E5, fig5). Only
+  headline was **not supported as a task-general claim** and is reported as a
+  characterized, regime-dependent decision rule (E5, Figure 8). Only
   the pre-computed curves from that GPU work are committed here
-  (`preprint/g1_harden_curves.npz`); fig5 just *plots* them, so no GPU is needed to
-  reproduce the figure.
+  (`preprint/g1_harden_curves.npz`); Figure 8 just *plots* them, so no GPU is needed
+  to reproduce the figure.
 - **The GNN oracle remains a pluggable option, not a requirement.** The methods
   describe a GIN/GAT deep-learning oracle (`src/models/gnn.py`); `make install-gpu`
   adds the CUDA wheels for anyone who wants to retrain it. The headline numbers do
@@ -78,9 +84,9 @@ campaign roll-up is `preprint/e8_campaign_results.json` and its provenance store
 
 | Target | Script | Produces |
 |---|---|---|
-| `repro-spine` | `preprint/feasibility_and_figures.py` | E1-E5: `fig1_sprt_efficiency`, `fig2_molecules`, `fig3_conformal_coverage`, `fig4_calibration_reliability`, `fig5_selective_prediction`, `fig6_label_efficiency_regime`, `feasibility_summary.json` |
+| `repro-spine` | `preprint/feasibility_and_figures.py` | E1-E5: `fig1_sprt_efficiency`, `fig2_conformal_coverage`, `fig3_calibration_reliability`, `fig4_selective_prediction`, `fig5_molecules`, `fig8_label_efficiency_regime`, `feasibility_summary.json` |
 |  | `preprint/e7_discovery_probe.py` | 5/5 driver rediscovery + 1398 cliffs, `e7_discovery_results.json` |
-|  | `preprint/e7_render.py` | `fig7_rule_cards`, `fig8_cliff_panel` |
+|  | `preprint/e7_render.py` | `fig6_rule_cards`, `fig7_cliff_panel` |
 | `repro-campaign` | `preprint/e8_campaign.py` | E8: `fig9_campaign_timeline`, `fig10_lineage_graph`, `e8_campaign_results.json`, DuckDB lineage |
 
 ## The engine (vendored under `src/`)
