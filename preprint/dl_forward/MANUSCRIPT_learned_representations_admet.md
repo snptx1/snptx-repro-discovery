@@ -262,10 +262,7 @@ improve in either), consistent with negative transfer when an endpoint with ampl
 shares capacity with smaller, possibly conflicting tasks (Caruana 1997). BBB shows negative
 transfer at low data (−0.030 ± 0.024 at 10%, 0 of 5 seeds) that fades by full data.
 
-**Table 1.** Multi-task minus single-task GIN, paired by seed, at each training fraction:
-mean ± sample s.d. over five scaffold-split seeds, with the number of seeds in which multi-task is
-better in parentheses. Endpoints are ordered by dataset size. Positive AUROC and negative MAE
-differences favor multi-task.
+<div align="center">
 
 | endpoint (metric) | n | f = 0.10 | f = 0.25 | f = 0.50 | f = 1.00 |
 |---|---|---|---|---|---|
@@ -275,6 +272,12 @@ differences favor multi-task.
 | BBB (AUROC ↑) | 2030 | −0.030 ± 0.024 (0/5) | −0.026 ± 0.037 (1/5) | −0.010 ± 0.011 (0/5) | 0.000 ± 0.031 (2/5) |
 | AMES (AUROC ↑) | 7278 | +0.003 ± 0.025 (3/5) | −0.023 ± 0.022 (1/5) | −0.012 ± 0.037 (1/5) | −0.049 ± 0.017 (0/5) |
 | Solubility (MAE ↓) | 9982 | 0.000 ± 0.357 (4/5) | +0.110 ± 0.173 (1/5) | +0.103 ± 0.254 (3/5) | +0.145 ± 0.112 (0/5) |
+
+</div>
+
+<sub><strong>Table 1.</strong> Multi-task minus single-task GIN, paired by seed, at each training fraction: mean ± sample s.d. over five scaffold-split seeds, with the number of seeds in which multi-task is better in parentheses. Endpoints are ordered by dataset size. Positive AUROC and negative MAE differences favor multi-task.</sub>
+
+<br>
 
 Figure 1 shows the underlying data-efficiency curves. Neither graph model approaches the
 RF on raw accuracy: at full data the RF reaches AUROC 0.892, 0.817, 0.865, and 0.945 on BBB,
@@ -323,10 +326,7 @@ classification endpoints at f = 0.10, pretraining changes AUROC by +0.002 (singl
 individual nodes alone gives limited improvement and can transfer negatively, so we treat supervised multi-task training (§4.1) as
 the operative sharing mechanism in this label regime.
 
-**Table 2.** Pretraining ablation: primary-metric difference (pretrained minus from-scratch),
-mean ± s.d. over five scaffold-split seeds at each low-data fraction. Positive AUROC and
-negative MAE differences favor pretraining. No cell survives Holm correction across the 36
-comparisons.
+<div align="center">
 
 | endpoint | arm | metric | Δ @ f = 0.10 | Δ @ f = 0.25 | Δ @ f = 0.50 |
 |---|---|---|---|---|---|
@@ -342,6 +342,12 @@ comparisons.
 |  | multi | MAE ↓ | +0.021 ± 0.245 | −0.033 ± 0.097 | −0.141 ± 0.214 |
 | Caco2 | single | MAE ↓ | −0.012 ± 0.077 | −0.129 ± 0.090 | +0.046 ± 0.159 |
 |  | multi | MAE ↓ | −0.039 ± 0.015 | −0.013 ± 0.009 | −0.001 ± 0.043 |
+
+</div>
+
+<sub><strong>Table 2.</strong> Pretraining ablation: primary-metric difference (pretrained minus from-scratch), mean ± s.d. over five scaffold-split seeds at each low-data fraction. Positive AUROC and negative MAE differences favor pretraining. No cell survives Holm correction across the 36 comparisons.</sub>
+
+<br>
 
 <p align="center"><img src="figures/fig_pretrain_ablation.png" alt="Figure 2" width="700"></p>
 
@@ -373,9 +379,7 @@ score, AURC, and selective accuracy. All values come from one split with no seed
 error bars, so gaps of a few thousandths, such as the ensemble's and RF's mean set sizes,
 are not resolved.
 
-**Table 3.** Uncertainty methods on the four classification endpoints (fixed split, mean over
-endpoints). Coverage is the realized test coverage of the nominal 90% conformal sets. Bold
-marks the best graph model in each column; the RF row is the descriptor comparator.
+<div align="center">
 
 | method | ECE ↓ | NLL ↓ | Brier ↓ | set size @ 90% ↓ | coverage | AURC ↓ | sel. acc. @ 70% ↑ |
 |---|---|---|---|---|---|---|---|
@@ -383,6 +387,12 @@ marks the best graph model in each column; the RF row is the descriptor comparat
 | single GIN | **0.052** | 0.505 | 0.162 | 1.265 | 0.878 | 0.146 | 0.837 |
 | MC dropout | 0.071 | 0.532 | 0.164 | 1.327 | 0.891 | 0.155 | 0.822 |
 | deep ensemble (K = 5) | 0.068 | **0.482** | **0.153** | **1.212** | 0.877 | **0.126** | **0.853** |
+
+</div>
+
+<sub><strong>Table 3.</strong> Uncertainty methods on the four classification endpoints (fixed split, mean over endpoints). Coverage is the realized test coverage of the nominal 90% conformal sets. Bold marks the best graph model in each column; the RF row is the descriptor comparator.</sub>
+
+<br>
 
 <p align="center"><img src="figures/fig_ensemble_calibration.png" alt="Figure 3" width="700"></p>
 
@@ -416,8 +426,7 @@ endpoints. Two of the endpoints are strongly imbalanced (83% positive test molec
 and 88% for HIA), so selective accuracy there sits close to ceiling. The RF has the highest
 selective accuracy on all four endpoints.
 
-**Table 4.** Conformal and selective-prediction results per endpoint on the fixed split.
-Coverage is realized test coverage of the nominal 90% sets. Bold marks the best graph model.
+<div align="center">
 
 | endpoint | test n | coverage RF / single / ens. | set size RF / single / MC / ens. | sel. acc. @ 70% RF / single / MC / ens. |
 |---|---|---|---|---|
@@ -425,6 +434,12 @@ Coverage is realized test coverage of the nominal 90% sets. Bold marks the best 
 | AMES | 864 | 0.922 / 0.880 / 0.883 | 1.333 / 1.375 / 1.510 / **1.309** | 0.871 / 0.782 / 0.742 / **0.830** |
 | hERG | 153 | 0.922 / 0.837 / 0.830 | 1.418 / 1.268 / 1.255 / **1.222** | 0.832 / **0.804** / 0.794 / 0.785 |
 | HIA | 106 | 0.925 / 0.887 / 0.887 | 1.075 / 1.066 / 1.094 / **1.019** | 0.986 / 0.932 / **0.946** / 0.932 |
+
+</div>
+
+<sub><strong>Table 4.</strong> Conformal and selective-prediction results per endpoint on the fixed split. Coverage is realized test coverage of the nominal 90% sets. Bold marks the best graph model.</sub>
+
+<br>
 
 <p align="center"><img src="figures/fig_conformal_efficiency.png" alt="Figure 4" width="700"></p>
 
@@ -460,10 +475,7 @@ error bounds (Appendix A.4) are nominal, and each count comes from one random me
 order (§6). Each endpoint's decision is logged to the DuckDB lineage store with its
 experiment ID, parameters, and the oracle's summary prediction.
 
-**Table 5.** Campaign outcome per endpoint. Shift is the subgroup's standardized label mean
-in pool standard deviations. The fixed-sample test at the same nominal error rates needs 68.7
-measurements; for hERG and HIA it is capped at the subgroup size (marked *), which lowers its
-power below nominal, and the total uses the capped values.
+<div align="center">
 
 | endpoint | test n | subgroup | shift | verdict | SPRT n | fixed n | saved |
 |---|---|---|---|---|---|---|---|
@@ -472,6 +484,12 @@ power below nominal, and the total uses the capped values.
 | hERG | 153 | 45 | 0.587 | GO | 14 | 45.0* | 31.0 |
 | HIA | 106 | 31 | 0.276 | undecided | 31 | 31.0* | 0.0 |
 | total |  |  |  | 3 GO | 150 | 213.4 | 63.4 (29.7%) |
+
+</div>
+
+<sub><strong>Table 5.</strong> Campaign outcome per endpoint. Shift is the subgroup's standardized label mean in pool standard deviations. The fixed-sample test at the same nominal error rates needs 68.7 measurements; for hERG and HIA it is capped at the subgroup size (marked *), which lowers its power below nominal, and the total uses the capped values.</sub>
+
+<br>
 
 <p align="center"><img src="figures/fig_campaign_efficiency.png" alt="Figure 5" width="700"></p>
 
@@ -502,10 +520,7 @@ describes this run rather than a tested null.
 Table 6 collects the per-endpoint full-data accuracy of the three model families and the
 ensemble's decision metrics on the fixed split.
 
-**Table 6.** Full-data accuracy (training fraction 1.0; mean ± sample s.d. over five
-scaffold-split seeds) and K = 5 ensemble decision metrics (fixed split, classification only). The
-multi−single column is the full-data difference; the fraction-resolved differences are in
-Table 1.
+<div align="center">
 
 | endpoint | n | metric | RF | single-task | multi-task | multi−single | ens. ECE ↓ | coverage | set @ 90% ↓ | sel. acc. @ 70% ↑ |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -515,6 +530,12 @@ Table 1.
 | HIA | 578 | AUROC ↑ | 0.945 ± 0.035 | 0.929 ± 0.064 | 0.920 ± 0.051 | −0.009 | 0.074 | 0.887 | 1.019 | 0.932 |
 | Solubility | 9982 | MAE ↓ | 0.842 ± 0.067 | 1.215 ± 0.060 | 1.360 ± 0.063 | +0.145 | - | - | - | - |
 | Caco2 | 910 | MAE ↓ | 0.399 ± 0.039 | 0.658 ± 0.106 | 0.486 ± 0.052 | −0.172 | - | - | - | - |
+
+</div>
+
+<sub><strong>Table 6.</strong> Full-data accuracy (training fraction 1.0; mean ± sample s.d. over five scaffold-split seeds) and K = 5 ensemble decision metrics (fixed split, classification only). The multi−single column is the full-data difference; the fraction-resolved differences are in Table 1.</sub>
+
+<br>
 
 Taken together: the RF is the most accurate model on every endpoint; sharing a graph encoder
 helps some small endpoints (clearly Caco2, partly HIA) and hurts the large ones; and a deep
@@ -891,6 +912,8 @@ the two works best; this ablation tests the node-level objective alone.
 
 All graph models share the encoder and protocol below.
 
+<div align="center">
+
 | group | setting | value |
 |---|---|---|
 | Encoder | backbone | GIN, sum pooling |
@@ -922,6 +945,10 @@ All graph models share the encoder and protocol below.
 | | measurement order seed | 20260905 |
 | Attention probe | GAT | 3 layers, hidden 64, heads 4 / 4 / 1, checkpoint by validation AUROC, unseeded |
 
+</div>
+
+<br>
+
 For the transfer, pretraining, and ensemble scripts, seeds pin NumPy and PyTorch,
 and `cudnn.deterministic` is set; residual GPU nondeterminism remains, so we report
 dispersion over seeds rather than bitwise reproduction. The interpreter is pinned to Python
@@ -937,8 +964,7 @@ molecules that appear verbatim (same canonical SMILES) in any other endpoint's t
 and the fraction whose scaffold does, averaged over the five seeds
 (`scaffold_overlap.py`, which reproduces the training splits exactly).
 
-**Table A1.** Fraction of each endpoint's test molecules exposed to the multi-task trunk
-through other endpoints' training data: same molecule / same scaffold, mean over five seeds.
+<div align="center">
 
 | endpoint | f = 0.10 | f = 0.25 | f = 0.50 | f = 1.00 |
 |---|---|---|---|---|
@@ -948,6 +974,12 @@ through other endpoints' training data: same molecule / same scaffold, mean over
 | BBB | 0.018 / 0.059 | 0.044 / 0.171 | 0.080 / 0.266 | 0.176 / 0.469 |
 | AMES | 0.038 / 0.136 | 0.049 / 0.317 | 0.134 / 0.555 | 0.209 / 0.653 |
 | Solubility | 0.008 / 0.071 | 0.025 / 0.144 | 0.060 / 0.277 | 0.109 / 0.427 |
+
+</div>
+
+<sub><strong>Table A1.</strong> Fraction of each endpoint's test molecules exposed to the multi-task trunk through other endpoints' training data: same molecule / same scaffold, mean over five seeds.</sub>
+
+<br>
 
 Exposure rises with the training fraction because the other endpoints' training sets grow.
 The trunk never sees a target endpoint's labels for exposed molecules, but it learns their
