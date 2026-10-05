@@ -1,14 +1,13 @@
 """Generate the revised system-architecture schematic (fig0 v2) for the DL-forward study.
 
-Non-destructive companion to `architecture_figure.py`. This version re-centres the
-diagram on the *learned* oracle (a K=5 deep ensemble of temperature-scaled single-task GIN
-members), demotes the random forest to an explicit descriptor baseline, exposes the
-model-building sub-workflow (graph featurizer -> GIN encoder, trained single- and
-multi-task for the transfer study -> deep ensemble -> temperature scaling / conformal),
-and shows the GAT attention probe as a separate model trained on the same graphs. The
-abductive-discovery component belongs to the companion engine and is not re-run here.
+Companion to `architecture_figure.py`. The four-endpoint classification oracle averages
+five single-task GIN members after fitting each member's temperature. The RF is an
+independent comparator. Conformal and selective metrics are evaluated alongside the
+retrospective SPRT campaign and logged; they do not determine its stopping boundary.
+The GAT score diagnostic is separate. The companion engine's abductive-discovery
+component is not evaluated here.
 
-CPU-only, no data. Figure -> preprint/figures/fig0_architecture_v2.png.
+CPU-only, no data. Figure -> preprint/dl_forward/figures/fig0_architecture_v2.png.
 """
 
 from __future__ import annotations
@@ -104,46 +103,46 @@ def build() -> Path:
     ax.set_xlim(-2, 172)
     ax.set_ylim(-8, 110)
     ax.axis("off")
-    ax.set_title("System architecture: a learned oracle driving defensible decisions",
+    ax.set_title("Study architecture: graph models and a retrospective sequential campaign",
                  fontsize=16, fontweight="bold", color=TEXT_PRIMARY, pad=12)
 
     # ------------------------------------------------------------------ main row
-    # Substrate -> learned oracle -> decision engine -> GO/NO-GO, all on one band.
+    # Six-endpoint transfer study; the classification ensemble uses four endpoints.
     stage(ax, 6, 60.5, 28, 23, "Substrate", C_SUBSTRATE,
           body=["TDC ADMET benchmarks", "6 ADMET endpoints", "molecular graphs"],
           tag="adapters/drugcomb.py")
     stage(ax, 48, 60.5, 28, 23, "Learned oracle", C_ORACLE,
-          body=["K=5 deep ensemble", "single-task GIN members", "temperature-scaled"],
+          body=["K=5 single-task GINs", "4 binary endpoints", "mean scaled probabilities"],
           tag="models/gnn.py")
 
-    # Decision-engine container holds the three coupled decisions, stacked and spaced.
-    stage(ax, 90, 47.5, 42, 43.5, "Decision engine", C_ENGINE, title_pad=3.0,
+    # Evaluation metrics are logged alongside stopping; they do not drive the SPRT.
+    stage(ax, 90, 47.5, 42, 43.5, "Retrospective campaign", C_ENGINE, title_pad=3.0,
+          title_size=12.5,
           face=FILL_DECISION)
     stage(ax, 93, 73.5, 36, 8.5, "SPRT · when to stop", C_SPRT,
-          tag="experiment_design.py", face=DARK_BG,
+          tag="ranked labels · experiment_design.py", face=DARK_BG,
           title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
     stage(ax, 93, 62.5, 36, 8.5, "Conformal + selective", C_CONFORMAL,
-          tag="uncertainty.py", face=DARK_BG,
+          tag="evaluation metrics · logged only", face=DARK_BG,
           title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
-    stage(ax, 93, 51.5, 36, 8.5, "Abductive discovery", C_ABDUCTIVE,
-          tag="scientific_discovery.py · not re-run here", face=DARK_BG,
+    stage(ax, 93, 51.5, 36, 8.5, "Companion discovery", C_ABDUCTIVE,
+          tag="abductive component · not evaluated here", face=DARK_BG,
           title_size=11.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
 
-    stage(ax, 140, 60.5, 24, 23, "GO / NO-GO", C_GONOGO,
-          body=["calibrated go/no-go", "sequential stopping", "full lineage"],
-          tag="e8_campaign_learned.py", face=FILL_GONOGO)
+    stage(ax, 140, 60.5, 24, 23, "SPRT outcome", C_GONOGO,
+          body=["GO / NO-GO / undecided", "Gaussian working model", "endpoint record"],
+          body_size=10, tag="e8_campaign_learned.py", face=FILL_GONOGO)
 
-    # Left-to-right pipeline flow (each arrow sits in a clear inter-box gap at y=72).
+    # Probabilities rank the campaign subgroup; metrics form a separate evaluation.
     arrow(ax, (34, 72), (48, 72), C_SUBSTRATE)
-    arrow(ax, (76, 72), (90, 72), C_ORACLE)
-    arrow(ax, (132, 72), (140, 72), C_ENGINE)
+    arrow(ax, (76, 78), (93, 78), C_ORACLE)
+    arrow(ax, (76, 67), (93, 67), C_ORACLE, ls="--")
+    arrow(ax, (129, 78), (140, 78), C_ENGINE)
 
     # ---------------------------------------------- interpretability probe (top)
-    # A separate GAT trained on the same molecular graphs; its attention is tested
-    # against a descriptor atom-salience rule (a negative result). Fed from the substrate
-    # through a corridor clear of the active-learning bracket at x=20.
-    stage(ax, 46, 90, 40, 9, "GAT attention probe", C_ATTN,
-          tag="attention_attribution.py · negative result", face=DARK_BG,
+    # The separate GAT diagnostic identifies a normalized constant atom-score sum.
+    stage(ax, 46, 90, 40, 9, "GAT score diagnostic", C_ATTN,
+          tag="incoming attention sum = 1 · Figure 6", face=DARK_BG,
           title_size=11, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
     bracket(ax, [(28, 83.5), (28, 94.5), (46, 94.5)], C_ATTN, ls="--")
 
@@ -156,44 +155,43 @@ def build() -> Path:
             bbox=dict(facecolor=DARK_BG, edgecolor="none", pad=2))
 
     # ------------------------------------------------ descriptor baseline (comparator)
-    # Demoted RF, parked below the substrate with an orthogonal comparator link.
-    stage(ax, 6, 48, 28, 8.5, "Descriptor baseline", C_STRUCT,
-          tag="RF · Morgan/RDKit", face=DARK_BG,
+    # Independent descriptor comparator, supplied by the molecular substrate.
+    stage(ax, 6, 48, 28, 8.5, "RF comparator", C_STRUCT,
+          tag="RDKit + Morgan fingerprints", face=DARK_BG,
           title_size=10.5, tag_size=8.5, title_pad=1.8, tag_pad=1.1)
-    bracket(ax, [(34.7, 52.25), (42, 52.25), (42, 67.5), (48, 67.5)],
-            C_STRUCT, ls="--", lw=1.3, ms=11)
+    arrow(ax, (20, 59.8), (20, 57.2), C_STRUCT, ls="--", lw=1.3, ms=11)
 
     # ----------------------------------------------- training sub-workflow (bottom)
-    # How the oracle is built. A left-to-right strip under the pipeline; one arrow
-    # rises straight into the oracle in an otherwise empty corridor at x=62.
+    # Per-member temperature fitting precedes the ensemble probability average.
     sub_y, sub_h, sub_w = 26, 9, 24
     subs = [
         (6, "Graph featurizer", C_SUBSTRATE, "9-dim atoms · bond graph"),
-        (38, "GIN encoder", C_ORACLE, "single- and multi-task"),
-        (70, "Deep ensemble", C_ORACLE, "K=5 single-task members"),
-        (102, "Temp scale + conformal", C_ORACLE, "calibrate · 90% sets"),
+        (38, "Single-task GINs", C_ORACLE, "K=5 per classification endpoint"),
+        (70, "Temperature / member", C_ORACLE, "fit on validation labels"),
+        (102, "Average probabilities", C_ORACLE, "ensemble predictive distribution"),
     ]
     for x, title, accent, tag in subs:
         stage(ax, x, sub_y, sub_w, sub_h, title, accent, tag=tag, face=DARK_BG,
-              title_size=9.0 if title == "Temp scale + conformal" else 10.5,
-              tag_size=8.2, title_pad=1.8, tag_pad=1.1)
+              title_size=9.0, tag_size=7.5, title_pad=1.8, tag_pad=1.1)
     for x0 in (30, 62, 94):  # horizontal flow between the four steps
         arrow(ax, (x0, sub_y + sub_h / 2), (x0 + 8, sub_y + sub_h / 2),
               C_STRUCT, lw=1.3, ms=11)
-    ax.text(6.5, sub_y - 2.4, "model-building sub-workflow  ·  train_multitask_gnn.py  ·  make_ensemble_uncertainty.py",
-            ha="left", va="top", fontsize=10, style="italic", color=TEXT_SECONDARY)
-    # Strip -> oracle: straight up the empty x=62 corridor into the oracle's base.
-    arrow(ax, (62, sub_y + sub_h), (62, 60.5), C_ORACLE, lw=1.5, ms=13)
+    ax.text(6.5, sub_y - 2.4,
+            "Transfer study: single-/multi-task GINs on six endpoints  ·  Ensemble: single-task members on four classifiers",
+            ha="left", va="top", fontsize=9, style="italic", color=TEXT_SECONDARY)
+    # Only the final probability average feeds the learned-oracle box.
+    bracket(ax, [(114, sub_y + sub_h), (114, 42), (62, 42), (62, 60.5)],
+            C_ORACLE, ls="-", lw=1.5, ms=13)
 
     # ----------------------------------------------------------- DuckDB lineage bar
     ax.add_patch(FancyBboxPatch(
         (6, 4), 158, 9, boxstyle="round,pad=0.7,rounding_size=1.8",
         linewidth=1.4, edgecolor=C_STRUCT, facecolor=CARD_BG))
     ax.text(85, 8.5,
-            "DuckDB lineage  ·  every decision traced from task to oracle to SPRT verdict  ·  intelligence/catalog.py",
-            ha="center", va="center", fontsize=12.5, color=TEXT_PRIMARY)
+            "DuckDB records  ·  parameters, oracle summaries, SPRT outcomes, and evaluation metrics  ·  intelligence/catalog.py",
+            ha="center", va="center", fontsize=10.8, color=TEXT_PRIMARY)
     # Dotted drops into the lineage bar from clear corridors only (no box crossings).
-    for x0, y0 in [(100, 47.5), (152, 62)]:
+    for x0, y0 in [(131, 47.5), (152, 59.8)]:
         arrow(ax, (x0, y0), (x0, 13), C_STRUCT, ls=":", lw=1.3, ms=11)
 
     # Keep the role key below the lineage bar, outside every connector route.
@@ -201,7 +199,7 @@ def build() -> Path:
         (6, C_SUBSTRATE, "Input + feedback"),
         (38, C_ORACLE, "Model + calibration"),
         (70, C_ENGINE, "Decisions + outputs"),
-        (102, C_ATTN, "Interpretability"),
+        (102, C_ATTN, "Score diagnostic"),
         (134, C_STRUCT, "Baseline + lineage"),
     ]:
         ax.plot([x, x + 4], [-3, -3], color=color, lw=3, solid_capstyle="round")

@@ -1,33 +1,22 @@
-"""Interpretability probe: GAT attention vs descriptor-based atom salience (AGENT_09 Pillar-2 support).
+"""Historical GAT training and incoming-attention score diagnostic.
 
-A self-contained check: train a graph-attention network on a data-poor
-classification endpoint, read the learned final-layer attention, and ask whether the
-atoms the model attends to line up with a simple, chemically motivated descriptor rule.
+The original experiment tried to compare an atom score with an aromatic-or-nitrogen
+rule. That attribution interpretation is withdrawn: the score sums softmax-normalized
+incoming coefficients, including self-loops, and is identically one in evaluation mode.
+Rule AUROC and top-three enrichment therefore rank floating-point residuals rather
+than meaningful atom importance. Rerunning this driver does not repair the statistic.
 
-We do NOT claim the attention *is* a mechanism; we report the agreement between a learned,
-per-molecule attribution and a transparent rule (aromatic or nitrogen atoms -- the
-lipophilic-ring / basic-amine motifs that dominate e.g. hERG and CNS-permeant chemistry).
+This script retains the original training, eligibility filter, scoring, and archived
+metric names for provenance. Predictive GAT AUROC is a separate result. Fresh output
+explicitly marks attribution as invalid and records the numerical score spread.
+Figure 6 and the walkthrough diagnose the committed scores without retraining.
 
-Design:
-    * endpoints: hERG and BBB (both classification, hERG is data-poor).
-    * one fixed scaffold cold-split (SPLIT_SEED=0), leakage-controlled, reusing the
-      Pillar-1 harness featurization and splitter.
-    * GAT (src/models/gnn.py::GATModel via build_gnn_model), trained to convergence on
-      train, model-selected on val AUROC.
-    * attention score per atom = sum of final-layer incoming attention weights.
-    * node-level "salient" label derived from the cached node features themselves
-      (feature[0]=atomic number, feature[4]=aromatic flag): salient = aromatic OR nitrogen.
-    * metrics on the held-out test atoms: AUROC(attention -> salient) and a top-k
-      enrichment (fraction of the top-3 attended atoms that are salient, minus the
-      molecule's base rate).
-
-Outputs (non-destructive) under dl_forward/artifacts/:
-    - attention_attribution.json : per-endpoint agreement metrics + a few examples.
-    - attention_nodes.npz        : flattened attention scores + salient labels per endpoint.
-
-Usage:
+Usage from the repository root (GPU recommended; training is unseeded):
     PYTHONPATH=src:. python preprint/dl_forward/attention_attribution.py --smoke
-    PYTHONPATH=src:. python preprint/dl_forward/attention_attribution.py   # GPU
+    PYTHONPATH=src:. python preprint/dl_forward/attention_attribution.py
+
+Outputs overwrite attention_attribution.json and attention_nodes.npz in DL_ART_DIR
+(or the local artifacts directory). Use a separate DL_ART_DIR to preserve archived runs.
 """
 
 from __future__ import annotations
@@ -122,7 +111,7 @@ def predict_probs(model, data: H.EndpointData, idx: np.ndarray,
 
 @torch.no_grad()
 def node_attention(model, graph, device: torch.device) -> np.ndarray:
-    """Per-atom attention from the final GAT layer (sum of incoming edge weights)."""
+    """Legacy normalized incoming sum: constant one, invalid as atom attribution."""
     model.eval()
     x = graph.x.to(device)
     edge_index = graph.edge_index.to(device)
@@ -189,6 +178,9 @@ def evaluate_endpoint(key: str, cfg: TrainConfig, device: torch.device) -> dict:
 
     res = {
         "endpoint": key,
+        "attribution_valid": False,
+        "score_population_std": float(flat_scores.std(ddof=0)),
+        "score_max_abs_deviation_from_one": float(np.max(np.abs(flat_scores - 1.0))),
         "val_auroc": round(val_auc, 4),
         "test_auroc": round(test_auc, 4),
         "n_test_molecules": int(len(all_scores)),
@@ -212,6 +204,7 @@ def main() -> None:
         cfg = replace(cfg, epochs=5, batch_size=32)
 
     device = _device()
+    log("WARNING: incoming attention sums are constant; rule metrics are invalid attribution diagnostics.")
     log(f"device={device}  endpoints={ENDPOINTS}  epochs={cfg.epochs}")
 
     results, npz = {}, {}
@@ -223,6 +216,8 @@ def main() -> None:
 
     meta = {
         "study": "attention_attribution",
+        "attribution_valid": False,
+        "diagnostic": "Incoming softmax-normalized attention sums equal one in exact arithmetic.",
         "generated_at": datetime.now(UTC).isoformat(),
         "device": str(device),
         "smoke": args.smoke,

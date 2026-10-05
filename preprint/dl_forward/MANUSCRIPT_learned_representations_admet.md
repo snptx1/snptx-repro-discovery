@@ -1,4 +1,4 @@
-# Learned molecular representations with calibrated deep-ensemble uncertainty for label-efficient ADMET decisions
+# Molecular graph models for ADMET: multitask comparisons, ensemble probabilities, and retrospective sequential testing
 
 Daniel R. Russell<br>
 Autonomous Discovery Systems · Biomedical ML, SNPTX<br>
@@ -6,94 +6,90 @@ Correspondence: dan@snptx.ai
 
 ## Abstract
 
-Early molecular discovery is limited by the cost of measurement and by a trust gap: models
-rarely say how confident they are, or when enough has been measured to make a call. A
-companion study built a calibrated sequential decision engine around a random-forest
-descriptor oracle. Here we replace that oracle with learned graph models and ask two
-questions under a pre-specified protocol (Murcko scaffold cold-splits within each endpoint,
-every endpoint reported). **First, does a shared graph encoder transfer across ADMET
-endpoints?** Across six TDC endpoints and five seeds, a multi-task Graph Isomorphism Network
-helps the smallest endpoints and hurts the largest. Caco2 permeability MAE falls by 0.11 to
-0.17 at every training fraction (18 of 20 seed-fraction pairs improve), HIA AUROC rises by
-0.071 at half the training data (5 of 5 seeds), and hERG gains are directional but within
-seed variability. On the large AMES and Solubility endpoints the shared trunk costs accuracy
-at full data (AUROC −0.049, MAE +0.145; 0 of 5 seeds improve), and BBB shows negative
-transfer at low data. Because splits are drawn per endpoint, the shared trunk also trains on
-other endpoints' molecules, and at full data 10-23% of each endpoint's test molecules appear
-verbatim in another endpoint's training set, so these gains may be optimistic and can't be
-attributed to transfer alone.
-**Second, does a deep ensemble turn graph-model uncertainty into
-better decisions?** On a fixed scaffold split, a five-member ensemble of temperature-scaled
-single-task networks gives the best proper scores of the graph models (mean NLL 0.482 versus
-0.505 for a single network and 0.532 for Monte Carlo dropout), the lowest risk-coverage AURC,
-and the smallest 90% conformal sets, though not the lowest expected calibration error. The
-descriptor random forest remains the stronger model on accuracy, NLL, Brier score, AURC and
-selective accuracy. In a retrospective run of the engine's sequential probability ratio
-test, the ensemble returns GO on three of four classification endpoints; on the two endpoints
-where a fixed-sample design at the same nominal error rates is feasible, the sequential test
-uses 105
-measurements against 137.4. In one unseeded run, graph attention shows near-chance alignment with a
-simple atom-salience rule. Every number regenerates on CPU from
-committed artifacts; a GPU tier retrains from scratch.
+Molecular property prediction can inform which assays to run and when to stop measuring,
+but predictive performance, probability calibration, and sequential decision validity
+require separate evaluation. We compare graph models with a descriptor random forest on
+six Therapeutics Data Commons ADMET endpoints using within-endpoint Murcko scaffold
+splits. Across five seeds and four retained training-scaffold fractions, multi-task GIN
+reduces Caco2 MAE by 0.11 to 0.17 relative to single-task GIN (18 of 20 seed-fraction pairs
+improve), and improves HIA AUROC by 0.071 at scaffold fraction 0.50 (5 of 5 seeds). At full
+data it performs worse on AMES and Solubility (AUROC −0.049, MAE +0.145). These are protocol
+comparisons: multi-task training repeats smaller task loaders and sees auxiliary training
+structures identical to 10-23% of each target's test records at full data, so the differences
+cannot isolate representation transfer. On one classification split, a five-member
+single-task ensemble has the lowest mean graph-model NLL (0.482 versus 0.505 for a single
+network and 0.532 for Monte Carlo dropout) and AURC, but its mean ECE is higher. The random
+forest leads on accuracy and most uncertainty metrics. Prediction-set coverage is empirical:
+the ensemble reuses validation labels for temperature fitting and conformal
+calibration, and molecule-level score exchangeability is not established. A retrospective
+probability-ranked SPRT campaign uses 105 measurements on BBB and AMES against an analytic
+fixed-sample requirement of approximately 137.4; its Gaussian working model, test-pool
+standardization, and single measurement order do not establish prospective error control.
+A separate GAT diagnostic identifies a constant incoming-attention sum, invalidating the
+original atom-salience interpretation. The walkthrough reconstructs the reported tables and
+checks selected quantities from committed predictions; separate GPU scripts retrain models.
 
 ## 1. Introduction
 
 Two costs dominate early molecular discovery. The first is measurement: each assay consumes
 material, time, and money, so deciding how many molecules to measure before committing to a
-go/no-go call is itself a scientific decision. The second is trust: a point prediction with
-no calibrated uncertainty can't be safely acted on, especially under the distribution shift
-that is the norm when a program moves into new chemical scaffolds.
+go/no-go call is itself a scientific decision. The second is trust: a point prediction
+without an uncertainty assessment gives little guidance about the reliability of a decision,
+especially when a program moves into new chemical scaffolds.
 
 A companion study (Russell 2026) addressed both costs with a calibrated sequential decision
 engine: Wald's sequential probability ratio test decides when to stop measuring,
 split-conformal and selective prediction quantify what the oracle doesn't know, and every
 decision is logged to a provenance store. That engine used a random-forest (RF) oracle on
-molecular descriptors, and its calibration-and-stopping layer was designed to accept any
+molecular fingerprints, and its calibration-and-stopping layer was designed to accept any
 oracle that emits class probabilities. This paper swaps in learned graph models and asks
 what they add.
 
-The question has a known complication. Under scaffold splits, descriptor and
-fingerprint models are often competitive with, or better than, graph neural networks on raw
-accuracy (Yang et al. 2019; Jiang et al. 2021). If learned representations earn their place,
+The question has a known complication. Yang et al. (2019) found strong aggregate performance
+for learned molecular representations, while fingerprint models remained competitive on
+smaller datasets. Jiang et al. (2021), using random splits, likewise found that the ranking
+of descriptor and graph models depended on the endpoint. These results motivate a strong
+descriptor comparator and explicit reporting of the splitting protocol. If learned representations earn their place,
 it is more likely through properties a tabular model lacks: a representation that can be
 shared across related endpoints, and uncertainty estimates that can be improved by
 ensembling. We test both.
 
 **Contributions.**
 
-1. A multi-task transfer study across six ADMET endpoints with data-efficiency curves over
-   four training fractions and five scaffold-split seeds, reported as paired multi-task minus
-   single-task differences with seed-level dispersion. Transfer benefits concentrate on the
-   smallest endpoints and reverse on the largest (§4.1).
+1. A comparison of multi-task and single-task GIN across six ADMET endpoints, four retained
+   training-scaffold fractions, and five split seeds, reported as paired differences with
+   seed-level dispersion and explicit training-exposure confounds (§4.1).
 2. A pretraining ablation testing whether self-supervised attribute masking (Hu et al. 2020)
-   adds to supervised transfer. It doesn't, detectably (§4.2).
+   changes supervised performance. No comparison survives Holm correction across the 36
+   tested cells; this does not establish equivalence (§4.2).
 3. A comparison of graph-model uncertainty methods (single network, Monte Carlo dropout, deep
    ensemble) against the RF baseline on calibration, conformal efficiency, and selective
    prediction under scaffold shift (§4.3-§4.4).
 4. The ensemble wired into the companion engine's sequential go/no-go campaign, with every
-   decision logged (§4.5), and a direct test of whether graph attention recovers a simple
-   descriptor rule (§4.6).
+   decision logged (§4.5), and a diagnostic showing why the implemented attention statistic
+   cannot test atom-salience alignment (§4.6).
 5. A measurement of how much of each endpoint's test set the multi-task trunk sees through
    the other endpoints' training data (Appendix A.10), which bounds how the transfer results
-   should be read.
+   must be interpreted.
 
 **Scope of the claims.** We don't claim that graph models are more accurate than the
 descriptor baseline: the RF leads on every endpoint at full data. We don't claim that the
 ensemble is the best-calibrated model by expected calibration error: it isn't. Scaffold
-splits are made within each endpoint, so the multi-task gains are measured against a baseline
-that sees less related chemistry. The uncertainty results come from one fixed split, the
-campaign is a retrospective simulation that uses test-pool statistics, and the attention
-probe is a negative result. Each of these boundaries is
-stated where the evidence is presented and collected in §6.
+splits are made within each endpoint, and multi-task training changes both structural
+exposure and target-task update counts. The uncertainty results come from one fixed split,
+the ensemble's temperature-scaled conformal construction reuses calibration labels, and the campaign
+is a retrospective simulation that uses test-pool statistics. The attention result is an
+implementation diagnostic. These boundaries are stated alongside the results and in §6.
 
 ## 2. Related work and positioning
 
 Graph neural networks learn representations directly from molecular graphs (Gilmer et al.
 2017; Kipf and Welling 2017; Velickovic et al. 2018; Xu et al. 2019). Benchmarks such as
-MoleculeNet (Wu et al. 2018) and systematic comparisons (Yang et al. 2019; Jiang et al. 2021)
-show that their accuracy advantage over fingerprint and descriptor models is inconsistent,
-particularly on small datasets and scaffold splits, which is why a strong RF baseline is
-retained here. Multi-task learning shares statistical strength across related tasks
+MoleculeNet (Wu et al. 2018) emphasize evaluation protocols and strong conventional
+baselines. Yang et al. (2019) report competitive learned representations, with outcomes
+depending on dataset size and splitting strategy; Jiang et al. (2021) compare models under
+random splitting. Those comparisons support endpoint-specific evaluation rather than a
+general claim that graph models outperform descriptors. Multi-task learning shares statistical strength across related tasks
 (Caruana 1997); in drug discovery, massively multi-task networks improve with more tasks and
 data, with gains that vary by task (Ramsundar et al. 2015). Self-supervised pretraining of
 graph networks can help or hurt depending on the objective, and node-level objectives alone
@@ -105,17 +101,21 @@ standard routes to calibrated deep uncertainty, and Monte Carlo dropout (Gal and
 before or after averaging matters: averaging individually calibrated members tends to make
 the ensemble underconfident (Rahaman and Thiery 2021; Wu and Gales 2021). Split-conformal
 prediction (Vovk et al. 2005; Angelopoulos and Bates 2023) gives distribution-free marginal
-coverage under exchangeability, which covariate shift breaks (Tibshirani et al. 2019).
+coverage when the fitted score function is independent of calibration labels and the
+calibration and test scores are exchangeable. Covariate shift can invalidate the ordinary
+construction; weighted conformal methods require suitable density-ratio assumptions
+(Tibshirani et al. 2019).
 Selective prediction (El-Yaniv and Wiener 2010; Geifman and El-Yaniv 2017) gives a principled
 abstention rule. The sequential probability ratio test (Wald 1945) minimizes expected sample
-size among tests with the same error rates (Wald and Wolfowitz 1948). Whether attention
+size for simple hypotheses under the specified independent sampling model among tests
+with no larger error probabilities (Wald and Wolfowitz 1948). Whether attention
 weights explain predictions is contested (Jain and Wallace 2019; Wiegreffe and Pinter 2019).
 
 Our contribution isn't a new estimator. It is a scaffold-split measurement, on real
-ADMET data, of where multi-task transfer helps and hurts, of how much a deep ensemble
-improves graph-model uncertainty and its downstream decisions relative to both graph and
-descriptor alternatives, and of what changes when that ensemble drives an existing
-sequential decision engine.
+ADMET data, of differences between multi-task and single-task training protocols, probability
+quality and empirical prediction-set behavior, and the operation of an existing sequential
+engine with an ensemble probability ranking. The campaign does not compare decision
+performance against RF, single-network, or MC-dropout rankings.
 
 ## 3. Methods
 
@@ -124,27 +124,37 @@ study's RF oracle; the RF is retained as a descriptor comparator; and the decisi
 reused unchanged. The abductive rule-discovery component of the engine belongs to the
 companion study and isn't re-run here.
 
-<p align="center"><img src="figures/fig0_architecture_v2.png" alt="Figure 0" width="800"></p>
+<p align="center"><img src="figures/fig0_architecture_v2.png" alt="Independent graph-model comparisons, probability ensemble, diagnostic metrics, and retrospective campaign branches" width="800"></p>
 
-<sub><strong>Figure 0.</strong> System architecture. Molecular graphs from six TDC ADMET endpoints feed the learned oracle, a K = 5 deep ensemble of temperature-scaled single-task GIN networks; the RF descriptor model sits beside it as a comparator. The decision engine turns the oracle's probabilities into a go/no-go call through sequential stopping (SPRT) and conformal and selective prediction, and every decision is logged to a DuckDB lineage store. The bottom strip shows how the learned models are built: the GIN encoder is trained single-task and multi-task for the transfer study (§4.1), and single-task members form the ensemble (§4.3). The GAT attention probe (§4.6) is a separate network trained on the same graphs. Blue marks inputs and feedback, yellow learned models and calibration, green decisions and outputs, purple interpretability, and grey the descriptor baseline and lineage. The dashed active-learning loop is future work.</sub>
+<sub><strong>Figure 0.</strong> System architecture. Six endpoints support the single-task and multi-task GIN comparison. For the four classification endpoints, K = 5 single-task members are temperature-scaled individually before their probabilities are averaged. The RF descriptor model is a separate comparator. Prediction-set and selective metrics are evaluated alongside the probability-ranked retrospective SPRT campaign and recorded with its decisions; they do not control stopping. The GAT diagnostic is separate from this decision path. Blue marks inputs, yellow learned models and calibration, green decisions and outputs, purple diagnostics, and grey the RF comparator and lineage. The dashed active-learning loop is future work.</sub>
 
 ### 3.1 Data and scaffold splits
 
-We use six Therapeutics Data Commons ADMET endpoints (Huang et al. 2021): BBB (Martins),
-AMES, hERG, and HIA (Hou) as binary classification, and Solubility (AqSolDB) and Caco2 (Wang)
-as regression, with 2030, 7278, 655, 578, 9982, and 910 molecules respectively. Every split is
+We use six Therapeutics Data Commons ADMET endpoints (Huang et al. 2021): BBB (Martins et al.
+2012), AMES (Xu et al. 2012), hERG (Wang et al. 2016a), and HIA (Hou et al. 2007) as binary
+classification, and Solubility (Sorkun et al. 2019) and Caco2 (Wang et al. 2016b) as regression,
+with 2030, 7278, 655, 578, 9982, and 910 featurized records respectively. These are record
+counts, not counts of unique compounds: canonical SMILES identify 1975, 7255, 648, 578, 9982,
+and 906 distinct structures in the corresponding datasets. Repeated structures are retained,
+including some with differing labels; no deduplication or relabeling was applied in this
+editorial revision. MAE is reported on each dataset's supplied target scale, after reversing
+training-set standardization. Every split is
 a Murcko scaffold cold-split (Bemis and Murcko 1996): unique scaffolds are randomly permuted
 and assigned whole to test (20% of scaffolds), validation (20%), and training, so within an
 endpoint no test or validation scaffold is seen in training. Splits are drawn independently
 for each endpoint. A model that trains on several endpoints, such as the multi-task trunk or
 the pretraining corpus, therefore also sees other endpoints' training molecules, some of which
 share a scaffold with, or are identical to, the target endpoint's test molecules; Appendix
-A.10 measures this. Training fractions of 0.10, 0.25, 0.50, and 1.00 are
-formed by subsampling whole training scaffolds. The transfer and pretraining studies repeat
+A.10 measures this. Fractions $f = 0.10, 0.25, 0.50, 1.00$ retain that fraction of available
+training scaffolds, subject to integer rounding. Scaffold groups vary in size, so $f$ is
+neither a record fraction nor a label budget. For example, Solubility at $f = 0.10$, seed 1,
+retains 3330 of 7938 full-training records (42.0%). The transfer and pretraining studies repeat
 this over five seeds (0-4), each seed drawing a new split and initialization. The
 uncertainty study and the campaign use one fixed split (seed 0). Apart from checkpoint
-selection in the attention probe (§3.8), the validation set is used only for temperature
-scaling and conformal calibration; models train for a fixed 150 epochs with no early stopping.
+selection in the attention diagnostic (§3.8), the validation set is used only for temperature
+scaling and conformal calibration. Reusing those labels for both steps has a separate
+conformal-validity consequence (§3.6). Supervised GIN models train for a fixed 150 epochs
+with no early stopping; the attention diagnostic uses validation checkpoint selection.
 
 ### 3.2 Featurization and graph encoder
 
@@ -155,28 +165,35 @@ attributes (bond order, conjugation, ring membership), but the GIN used here agg
 bond connectivity only and ignores them; only the edge-conditioned GINE variant, not used in
 this study, would consume them. The encoder is a Graph Isomorphism Network (GIN; Xu et al. 2019)
 from `src/models/gnn.py`, with four message-passing layers, hidden width 128, two-layer MLPs
-with batch normalization inside each GIN update, sum pooling, PairNorm (Zhao and Akoglu 2020)
-between layers, and DropEdge (Rong et al. 2020) at rate 0.1 during training.
+with batch normalization inside each GIN MLP and again after each convolution, sum pooling,
+and per-graph PairNorm (Zhao and Akoglu 2020) between layers. DropEdge (Rong et al. 2020)
+independently drops directed edge entries at rate 0.1 during training; the two directions of
+a bond are not forced to share a mask.
 
 ### 3.3 Multi-task objective and training
 
 The multi-task model shares one encoder trunk across all six endpoints and attaches a
 per-endpoint head: two logits for classification and one output for regression. Regression
-targets are standardized per endpoint on the training split so that cross-entropy and
-mean-squared error sit on comparable scales with unit task weights. Training visits the
-endpoints round-robin, one task batch per step, so no single endpoint dominates the trunk.
-Classification losses use inverse-frequency class weights. The single-task baseline has the
-same architecture trained on one endpoint, which isolates the effect of sharing the trunk.
+targets are standardized per endpoint on the training split, reducing differences in target
+scale without equalizing loss magnitudes or gradients. Training visits endpoints round-robin
+with unit task weights and inverse-frequency classification weights. Each multi-task epoch
+contains as many rounds as the largest task loader has batches; exhausted smaller loaders
+restart. Single-task training traverses its own loader once per epoch. Thus smaller endpoints
+receive more repeated target-task updates in multi-task training: at full data, seed 0, HIA
+receives 7650 versus 450 updates and Caco2 receives 7650 versus 750. Equal epoch counts and
+the same encoder architecture therefore do not isolate parameter sharing. Appendix A.1
+describes the objective and the training-exposure confound.
 All graph models use Adam (learning rate 5e-4, weight decay 5e-4, batch size 128). Appendix
-A.1 gives the objective.
+A.9 lists the settings.
 
 ### 3.4 Descriptor baseline
 
 The RF baseline uses ten RDKit physicochemical descriptors (molecular weight, cLogP, TPSA,
 hydrogen-bond donors and acceptors, rotatable bonds, aromatic rings, fraction sp3, heavy
 atoms, ring count) concatenated with a 1024-bit Morgan fingerprint of radius 2 (Rogers and
-Hahn 2010). It has 300 trees and balanced class weights for classification. It is the oracle
-of the companion study and a deliberately strong comparator.
+Hahn 2010). It has 300 trees and balanced class weights for classification. This is an
+adapted comparator: the companion campaign's RF uses Morgan fingerprints without these
+additional descriptors or balanced class weights, and its split proportions differ.
 
 ### 3.5 Deep ensemble and uncertainty baselines
 
@@ -196,7 +213,13 @@ Appendix A.2 gives the ensemble's uncertainty decomposition.
 Calibration is scored by top-label expected calibration error (ECE) over ten equal-width
 bins, negative log-likelihood (NLL), and the Brier score. Split-conformal prediction
 (`src/safety/uncertainty.py`) uses the score $1-\hat p(y\mid x)$, calibrated on the validation
-set at a nominal 90% target; we report mean set size and realized test coverage. Selective
+set at a nominal 90% target; we report mean set size and realized test coverage. For the
+single GIN and ensemble, the same validation labels also fit the temperatures. For the
+ensemble, fitting different member temperatures before averaging does not establish the
+usual fixed-score rank argument. A single binary network has a useful exception: a common
+scalar temperature preserves score ranks and exact order-statistic sets (Appendix A.5).
+The group-based split adds a separate concern about molecule-level score exchangeability
+for all methods. Selective
 prediction ranks test molecules by maximum class probability; we report the area under the
 risk-coverage curve (AURC) and accuracy on the most confident 70%. Appendices A.5-A.7 give
 the definitions.
@@ -206,6 +229,8 @@ the definitions.
 The campaign reuses the companion engine's decision logic with the ensemble as oracle
 (`e8_campaign_learned.py`). For each classification endpoint, test molecules are ranked by
 ensemble probability of the positive class, and the top 30% form the candidate subgroup.
+Conformal and selective metrics are logged alongside outcomes but are not selection or
+stopping gates. No alternative-oracle campaign is run on this same pool.
 Labels are standardized with the mean and standard deviation of the full test pool, and the
 subgroup's standardized labels are revealed one at a time in a random order. Wald's SPRT tests
 $H_0:\theta=0$ against $H_1:\theta=0.30$ (in pool standard deviations) at
@@ -213,25 +238,27 @@ $(\alpha,\beta)=(0.05,0.20)$, with the test direction set by the sign of the who
 mean. Both the standardization and the direction use labels that a real campaign would not
 yet have measured, so the procedure is a retrospective simulation rather than an
 implementable sequential design (§6). The comparator is the fixed-sample one-sided test at
-the same nominal error rates under the Gaussian working model, which needs 68.7 measurements.
+the same nominal error rates under the Gaussian working model, whose continuous sample-size
+requirement is approximately 68.7 (69 observations for an integer design). We retain the
+continuous approximation in Table 5; it is a theoretical budget, not an executed fixed test.
 When the subgroup is smaller than that,
 we cap the comparator at the subgroup size; a capped design has less than the nominal power,
 so it isn't a same-error-rate comparator. Every decision, its parameters, and the
 oracle's summary prediction are written to a DuckDB lineage store. Appendix A.4 gives the
 derivation.
 
-### 3.8 Attention probe
+### 3.8 Attention-score diagnostic
 
-To test whether attention offers interpretability, we train a separate three-layer graph
-attention network (GAT; Velickovic et al. 2018; hidden width 64, four heads in the first two
-layers and one in the last) on hERG and BBB, selecting the checkpoint by validation AUROC.
-Each atom's score is the sum of its incoming attention coefficients in the single-head final
-layer. We compare these scores with a transparent rule (an atom is salient if it is aromatic
-or a nitrogen) by the AUROC of attention against the rule, pooled over atoms, and by the
-enrichment of salient atoms among each molecule's three most-attended atoms. Molecules with
-fewer than four atoms, or whose atoms are all salient or all non-salient, are excluded, which
-leaves 148 of 153 hERG and 370 of 458 BBB test molecules. The probe's training isn't seeded.
-Appendix A.3 gives details.
+The original attribution analysis trained a separate three-layer GAT (Velickovic et al.
+2018; hidden width 64, heads 4 / 4 / 1) on hERG and BBB, selecting its checkpoint by validation
+AUROC. Its atom score sums incoming final-layer attention coefficients, including self-loops.
+Those coefficients are softmax-normalized over the same incoming edges, making the score
+identically one in exact arithmetic. We therefore audit the saved scores as an implementation
+diagnostic and withdraw the original atom-salience interpretation. The original aromatic-or-
+nitrogen rule and eligibility filter left 148 of 153 hERG and 370 of 458 BBB test records;
+the saved score vectors cover atoms from those eligible records. GAT predictive AUROC uses
+the full test sets and remains a distinct result. Training was unseeded. Appendix A.3 gives
+the normalization argument.
 
 ### 3.9 Statistical reporting
 
@@ -242,25 +269,26 @@ one condition. Per-run 95% bootstrap intervals over test molecules (2000 resampl
 stored in the artifacts; the tables report variation across seeds, which also captures
 variation in the split. With five seeds, single cells are
 underpowered, so we read consistency of direction across seeds and fractions alongside the
-means. For the 36-cell pretraining table we also apply a Holm correction (Holm 1979) to
+means. Seed-fraction pairs are correlated because fractions share a split and overlapping
+training data; counts such as 18/20 describe consistency, not 20 independent replications.
+For the 36-cell pretraining table we also apply a Holm correction (Holm 1979) to
 paired t-tests. The uncertainty study and the campaign use one split, so their differences
 carry no seed-level error bars; we treat small gaps there as unresolved.
 
 ## 4. Results
 
-### 4.1 Multi-task transfer concentrates on the smallest endpoints
+### 4.1 Multitask and single-task performance across endpoints
 
 Table 1 gives the paired multi-task minus single-task difference in each endpoint's primary
-metric, ordered by dataset size. The pattern follows endpoint size more than training
-fraction. Caco2, the third-smallest endpoint, benefits at every fraction (18 of 20
-seed-fraction pairs improve), with the largest gain at full data. HIA benefits consistently
-only at half the data (+0.071 ± 0.032, 5 of 5 seeds) and is slightly worse at 10% and at full
-data. hERG differences are positive on average at every fraction but small relative to their
+metric, ordered by record count. Caco2 has lower multi-task MAE at every scaffold fraction
+(18 of 20 seed-fraction pairs improve), with the largest gain at full data. HIA improves
+consistently only at $f = 0.50$ (+0.071 ± 0.032, 5 of 5 seeds) and is slightly worse at
+$f = 0.10$ and at full data. hERG differences are positive on average at every fraction but small relative to their
 seed spread (13 of 20 pairs improve). On the two largest endpoints the shared trunk costs
 accuracy at full data (AMES −0.049 ± 0.017, Solubility MAE +0.145 ± 0.112, 0 of 5 seeds
-improve in either), consistent with negative transfer when an endpoint with ample labels
-shares capacity with smaller, possibly conflicting tasks (Caruana 1997). BBB shows negative
-transfer at low data (−0.030 ± 0.024 at 10%, 0 of 5 seeds) that fades by full data.
+improve in either). BBB has a negative difference at $f = 0.10$ (−0.030 ± 0.024, 0 of 5 seeds)
+that fades by full data. These six heterogeneous endpoints do not isolate dataset size as
+a cause of the pattern, and the comparison also changes training exposure (§3.3).
 
 <div align="center">
 
@@ -275,56 +303,61 @@ transfer at low data (−0.030 ± 0.024 at 10%, 0 of 5 seeds) that fades by full
 
 </div>
 
-<sub><strong>Table 1.</strong> Multi-task minus single-task GIN, paired by seed, at each training fraction: mean ± sample s.d. over five scaffold-split seeds, with the number of seeds in which multi-task is better in parentheses. Endpoints are ordered by dataset size. Positive AUROC and negative MAE differences favor multi-task.</sub>
+<sub><strong>Table 1.</strong> Multi-task minus single-task GIN, paired by seed, at each retained training-scaffold fraction: mean ± sample s.d. over five split seeds, with the number of seeds in which multi-task is better in parentheses. Endpoints are ordered by record count. Positive AUROC and negative MAE differences favor multi-task. Fractions are not matched label budgets, and training-update exposure differs between methods.</sub>
 
 <br>
 
-Figure 1 shows the underlying data-efficiency curves. Neither graph model approaches the
+Figure 1 shows performance against the retained training-scaffold fraction. Neither graph model approaches the
 RF on raw accuracy: at full data the RF reaches AUROC 0.892, 0.817, 0.865, and 0.945 on BBB,
 AMES, hERG, and HIA (multi-task 0.815, 0.712, 0.774, 0.920) and MAE 0.842 and 0.399 on
 Solubility and Caco2 (multi-task 1.360, 0.486). The RF leads at every fraction on every
 endpoint except HIA at f = 0.50, where multi-task (0.904) and RF (0.900) are level within
-seed variability. What the shared trunk offers is a transferable representation that helps
-some small endpoints, not a more accurate predictor.
+seed variability. The multi-task protocol improves some endpoints relative to single-task
+training, but the RF remains a strong comparator.
 
-These gains need one more qualification. Because splits are drawn per endpoint, the
+Two exposure differences limit the interpretation. Smaller task loaders are repeated in
+multi-task training (§3.3), increasing target-label reuse relative to single-task training.
+Because splits are drawn per endpoint, the
 multi-task trunk trains on other endpoints' molecules that the single-task baseline never
 sees, and some of them are the target endpoint's test molecules or share their scaffolds
 (Appendix A.10). The exposure grows with the training fraction: at f = 0.10, 1-4% of each
 endpoint's test molecules appear verbatim in another endpoint's training set (4-14% share a
 scaffold), rising to 10-23% (38-65%) at full data. The trunk never sees the target endpoint's
 labels for those molecules, but it does learn their structures, so the multi-task gains in
-Table 1 can't be attributed to transfer alone and may be optimistic. A globally
+Table 1 can't be attributed to transfer alone. A globally
 scaffold-disjoint protocol could show smaller gains, or, if the overlapping molecules carry
-conflicting auxiliary signal, larger ones; only a rerun can tell. The
-exposure can't explain everything: Caco2 already improves at f = 0.10 (4 of 5 seeds), where
-only 2% of its test molecules are exposed. But its largest gain, at full data, coincides with
-its largest exposure (19%), and the two can't be separated with the present design.
+conflicting auxiliary signal, larger ones. Low verbatim overlap does not remove the
+update-exposure confound: Caco2 improves at $f = 0.10$, where only 2% of test records are
+exposed verbatim, but it also receives repeated task batches. A globally scaffold-disjoint
+split and matched target-task exposure are complementary controls for a future study.
 
-<p align="center"><img src="figures/fig_transfer_curves.png" alt="Figure 1" width="667"></p>
+<p align="center"><img src="figures/fig_transfer_curves.png" alt="Six endpoint performance curves against retained training-scaffold fraction" width="667"></p>
 
-<sub><strong>Figure 1.</strong> Data-efficiency curves for the RF descriptor baseline (grey), single-task GIN (yellow), and multi-task GIN (cyan) on six ADMET endpoints; AUROC for classification (higher is better), MAE for regression (lower is better). Points are means over five scaffold-split seeds and bands are ±1 sample s.d. Multi-task improves on single-task for Caco2 at every fraction and for HIA at f = 0.50; it is worse than single-task on AMES and Solubility at full data and on BBB at low data. Table 1 gives the paired differences.</sub>
+<sub><strong>Figure 1.</strong> Performance against retained training-scaffold fraction for RF (grey), single-task GIN (yellow), and multi-task GIN (cyan) on six endpoints. AUROC is higher-is-better; MAE is lower-is-better on each endpoint's supplied target scale. Points are means over five split seeds and bands are ±1 sample s.d. Table 1 gives paired differences. Scaffold fractions do not represent equal record fractions, and equal epoch counts do not match training exposure.</sub>
 
 ### 4.2 Ablation: self-supervised attribute-mask pretraining
 
 We tested whether self-supervised pretraining of the shared trunk adds to supervised
-transfer. Following the attribute-masking objective of Hu et al. (2020), we mask 15% of atoms
-per molecule by zeroing their feature rows and train the trunk for 40 epochs to predict each
-masked atom's element, using the union of all six endpoints' training molecules for each
-seed and fraction as the unlabeled corpus. The corpus contains no labels and none of an
-endpoint's own validation or test scaffolds, although, as in §4.1, other endpoints' training
-molecules can overlap a target's test set (Appendix A.10). We then fine-tune under the identical protocol and compare pretrained against from-scratch
-training for both single-task and multi-task models at the three low-data fractions, five
+training. Adapting the node-level attribute-masking objective of Hu et al. (2020), we mask
+each atom independently with probability 0.15, zero its feature row, and train for 40 epochs
+to predict the masked element. Loss is averaged over masked atoms in each minibatch,
+rather than equally over molecules (Appendix A.8). The unlabeled corpus concatenates the
+six endpoints' training graph lists for each seed and scaffold fraction, retaining repeated
+structures. Each endpoint contributes only its own training partition, but another
+endpoint's training graphs can overlap a target's validation or test structures (Appendix
+A.10). We then fine-tune under the same supervised protocol and compare pretrained against
+from-scratch training for both single-task and multi-task models at the three lowest scaffold fractions, five
 seeds each (Table 2).
 
-Pretraining has no detectable effect. Of the 36 paired comparisons, seven reach p < 0.05 on
+Of the 36 paired comparisons, seven reach p < 0.05 on
 an uncorrected paired t-test, with mixed signs, and none survives Holm correction. The most
 consistent direction is single-task Solubility, where pretraining lowers MAE at all three
 fractions (−0.126 ± 0.060 at f = 0.10 and −0.131 ± 0.071 at f = 0.50). Averaged over the
 classification endpoints at f = 0.10, pretraining changes AUROC by +0.002 (single-task) and
-+0.005 (multi-task). This matches Hu et al.'s finding that pretraining at the level of
-individual nodes alone gives limited improvement and can transfer negatively, so we treat supervised multi-task training (§4.1) as
-the operative sharing mechanism in this label regime.
++0.005 (multi-task). These results do not establish equivalence or rule out a useful effect
+with more replication. They concern this element-reconstruction objective and adaptation
+protocol; Hu et al. also evaluate combined node-level and graph-level pretraining, which is
+not tested here.
 
 <div align="center">
 
@@ -345,17 +378,17 @@ the operative sharing mechanism in this label regime.
 
 </div>
 
-<sub><strong>Table 2.</strong> Pretraining ablation: primary-metric difference (pretrained minus from-scratch), mean ± s.d. over five scaffold-split seeds at each low-data fraction. Positive AUROC and negative MAE differences favor pretraining. No cell survives Holm correction across the 36 comparisons.</sub>
+<sub><strong>Table 2.</strong> Pretraining ablation: primary-metric difference (pretrained minus from-scratch), mean ± sample s.d. over five split seeds at each retained training-scaffold fraction. Positive AUROC and negative MAE differences favor pretraining. No cell survives Holm correction across the 36 comparisons; absence of significance does not establish equivalence.</sub>
 
 <br>
 
-<p align="center"><img src="figures/fig_pretrain_ablation.png" alt="Figure 2" width="700"></p>
+<p align="center"><img src="figures/fig_pretrain_ablation.png" alt="Paired pretraining effects in separate classification and regression metric panels" width="700"></p>
 
-<sub><strong>Figure 2.</strong> Attribute-mask pretraining minus from-scratch training at the lowest training fraction (f = 0.10), in the beneficial direction (AUROC difference, or the negative of the MAE difference), for single-task (yellow) and multi-task (cyan) models. Bars are means and error bars ±1 s.d. over five seeds. Single-task Solubility is the largest and most consistent effect; no difference survives multiple-comparison correction.</sub>
+<sub><strong>Figure 2.</strong> Attribute-mask pretraining minus from-scratch training at retained training-scaffold fraction f = 0.10 for single-task (yellow) and multi-task (cyan) models. Panels separate classification AUROC differences, Solubility MAE differences, and Caco2 MAE differences; regression signs are reversed so positive values favor pretraining. Effect sizes across different metrics and target scales are not directly comparable. Bars show paired means and error bars ±1 sample s.d. over five seeds. No cell survives Holm correction across the full 36-cell ablation.</sub>
 
 ### 4.3 Deep-ensemble uncertainty: scoring rules and calibration
 
-Table 3 averages each uncertainty method over the four classification endpoints. Among the
+Table 3 takes an unweighted mean over the four classification endpoints for each method. Among the
 graph models, the ensemble has the best mean NLL (0.482 versus 0.505 single and 0.532 MC
 dropout), Brier score (0.153 versus 0.162 and 0.164), AURC (0.126 versus 0.146 and 0.155),
 selective accuracy at 70% coverage (0.853 versus 0.837 and 0.822), and conformal set size
@@ -364,13 +397,13 @@ the graph models on BBB, AMES, and hERG; on HIA, the smallest test set (106 mole
 negatives), the single network and MC dropout are better on all three.
 
 The ensemble isn't the best-calibrated graph model by ECE. Its mean ECE (0.068) is above the
-single temperature-scaled network (0.052) and the RF (0.053). This is the expected
-consequence of averaging members that were each calibrated first: averaging pulls
-probabilities toward the middle, so an ensemble of calibrated members tends to be
-underconfident (Rahaman and Thiery 2021; Wu and Gales 2021). Inverse-frequency class weights
-may add to this, since they shift predicted probabilities toward a balanced prior that a
-single temperature can't undo. Calibrating the averaged ensemble, rather than each member,
-is the natural fix and is left to future work.
+single temperature-scaled network (0.052) and the RF (0.053). Calibration order is one
+plausible explanation: averaging individually calibrated members can produce underconfidence
+(Rahaman and Thiery 2021; Wu and Gales 2021). ECE is unsigned, however, so the reported value
+does not identify underconfidence or establish its cause in this study. Inverse-frequency
+class weights can also affect the probability scale. Calibrating after averaging is a
+candidate experiment, with independent temperature-fitting and conformal-calibration data;
+it is not a demonstrated remedy for this split.
 
 Against the RF, the comparison is not close on most metrics. On this split the RF has the
 higher test AUROC on every classification endpoint (0.881, 0.864, 0.871, 0.911 versus the
@@ -381,7 +414,7 @@ are not resolved.
 
 <div align="center">
 
-| method | ECE ↓ | NLL ↓ | Brier ↓ | set size @ 90% ↓ | coverage | AURC ↓ | sel. acc. @ 70% ↑ |
+| method | ECE ↓ | NLL ↓ | Brier ↓ | set size @ nominal 90% ↓ | coverage | AURC ↓ | sel. acc. @ 70% ↑ |
 |---|---|---|---|---|---|---|---|
 | RF (descriptor baseline) | 0.053 | 0.371 | 0.117 | 1.213 | 0.918 | 0.062 | 0.910 |
 | single GIN | **0.052** | 0.505 | 0.162 | 1.265 | 0.878 | 0.146 | 0.837 |
@@ -390,23 +423,26 @@ are not resolved.
 
 </div>
 
-<sub><strong>Table 3.</strong> Uncertainty methods on the four classification endpoints (fixed split, mean over endpoints). Coverage is the realized test coverage of the nominal 90% conformal sets. Bold marks the best graph model in each column; the RF row is the descriptor comparator.</sub>
+<sub><strong>Table 3.</strong> Uncertainty methods on the four classification endpoints (fixed split, mean over endpoints). Coverage is the realized test coverage of the nominal 90% conformal sets. Bold marks the best graph-model value for each optimization metric; coverage is reported without ranking. The RF row is the descriptor comparator.</sub>
 
 <br>
 
-<p align="center"><img src="figures/fig_ensemble_calibration.png" alt="Figure 3" width="700"></p>
+<p align="center"><img src="figures/fig_ensemble_calibration.png" alt="Endpoint comparisons of ECE, negative log-likelihood, and Brier score" width="700"></p>
 
 <sub><strong>Figure 3.</strong> Per-endpoint ECE, NLL, and Brier score (lower is better) for the RF (grey), single GIN (yellow), MC dropout (green), and K = 5 deep ensemble (cyan) on the fixed scaffold split. The ensemble has the lowest NLL and Brier score among graph models on BBB, AMES, and hERG but not HIA, and it doesn't have the lowest ECE; the RF is lowest on NLL and Brier throughout.</sub>
 
 ### 4.4 Conformal coverage and selective prediction under scaffold shift
 
-Split-conformal coverage is guaranteed only for exchangeable calibration and test data, and
-a scaffold split is designed to break that (Appendix A.5). Realized coverage of the
+The standard split-conformal guarantee requires a score function fitted independently of
+calibration labels and exchangeable calibration and test scores. Here the ensemble reuses
+validation labels for both fitting member temperatures and conformal calibration, and
+within-endpoint group splitting does not establish molecule-level score exchangeability
+(Appendix A.5). Realized coverage of the
 ensemble's nominal 90% sets is 0.906, 0.883, 0.830, and 0.887 on BBB, AMES, hERG, and HIA
 (Table 4; mean 0.877). On hERG, coverage of 0.830 over 153 test molecules is about 2.9
-binomial standard errors below target. Molecules within a scaffold are correlated, so that
-standard error understates the true uncertainty, but the shortfall is large enough that
-nominal coverage shouldn't be assumed under scaffold shift. The RF covers at or above target on all four endpoints
+binomial standard errors below target using an independent-Bernoulli reference calculation.
+That calculation is not a scaffold-aware confidence interval or significance test. The
+observed shortfall illustrates why nominal coverage should not be assumed. The RF covers at or above target on all four endpoints
 (mean 0.918).
 
 Set size is a fair efficiency measure only at matched coverage. The single network and the
@@ -423,47 +459,58 @@ graph-model accuracy on its most confident 70% for BBB (0.866) and AMES (0.830),
 lowest on hERG (0.785 versus 0.804 single and 0.794 MC dropout), and on HIA it ties the
 single network (0.932) below MC dropout (0.946). Its higher mean comes from the first two
 endpoints. Two of the endpoints are strongly imbalanced (83% positive test molecules for BBB
-and 88% for HIA), so selective accuracy there sits close to ceiling. The RF has the highest
-selective accuracy on all four endpoints.
+and 88% for HIA), and confidence filtering changes those proportions further. On HIA the RF
+retains 74 records, 73 positive, and correctly predicts 73: its retained accuracy of 0.986
+equals the always-positive baseline on that subset. The ensemble retains 65 positives among
+74 records and predicts 69 correctly (0.932). Retained class composition is therefore needed
+alongside selective accuracy; AURC also combines prediction error with confidence ordering
+and is not a pure measure of uncertainty ranking. The RF has the highest observed selective
+accuracy on all four endpoints.
 
 <div align="center">
 
-| endpoint | test n | coverage RF / single / ens. | set size RF / single / MC / ens. | sel. acc. @ 70% RF / single / MC / ens. |
+| endpoint | test n | coverage RF / single / MC / ens. | set size RF / single / MC / ens. | sel. acc. @ 70% RF / single / MC / ens. |
 |---|---|---|---|---|
-| BBB | 458 | 0.904 / 0.908 / 0.906 | 1.024 / 1.352 / 1.448 / **1.299** | 0.950 / 0.832 / 0.804 / **0.866** |
-| AMES | 864 | 0.922 / 0.880 / 0.883 | 1.333 / 1.375 / 1.510 / **1.309** | 0.871 / 0.782 / 0.742 / **0.830** |
-| hERG | 153 | 0.922 / 0.837 / 0.830 | 1.418 / 1.268 / 1.255 / **1.222** | 0.832 / **0.804** / 0.794 / 0.785 |
-| HIA | 106 | 0.925 / 0.887 / 0.887 | 1.075 / 1.066 / 1.094 / **1.019** | 0.986 / 0.932 / **0.946** / 0.932 |
+| BBB | 458 | 0.904 / 0.908 / 0.900 / 0.906 | 1.024 / 1.352 / 1.448 / **1.299** | 0.950 / 0.832 / 0.804 / **0.866** |
+| AMES | 864 | 0.922 / 0.880 / 0.897 / 0.883 | 1.333 / 1.375 / 1.510 / **1.309** | 0.871 / 0.782 / 0.742 / **0.830** |
+| hERG | 153 | 0.922 / 0.837 / 0.843 / 0.830 | 1.418 / 1.268 / 1.255 / **1.222** | 0.832 / **0.804** / 0.794 / 0.785 |
+| HIA | 106 | 0.925 / 0.887 / 0.925 / 0.887 | 1.075 / 1.066 / 1.094 / **1.019** | 0.986 / 0.932 / **0.946** / 0.932 |
 
 </div>
 
-<sub><strong>Table 4.</strong> Conformal and selective-prediction results per endpoint on the fixed split. Coverage is realized test coverage of the nominal 90% sets. Bold marks the best graph model.</sub>
+<sub><strong>Table 4.</strong> Conformal and selective-prediction results per endpoint on the fixed split. Coverage is realized test coverage of the nominal 90% sets. Bold marks the smallest graph-model sets and highest graph-model selective accuracy; coverage is reported without ranking.</sub>
 
 <br>
 
-<p align="center"><img src="figures/fig_conformal_efficiency.png" alt="Figure 4" width="700"></p>
+<p align="center"><img src="figures/fig_conformal_efficiency.png" alt="Prediction-set size, empirical coverage, and retained accuracy shown together" width="700"></p>
 
-<sub><strong>Figure 4.</strong> Left: mean split-conformal set size at a nominal 90% target (lower is sharper; the dashed line marks a single-label set). Right: accuracy on the 70% most confident test molecules (higher is better). RF (grey), single GIN (yellow), MC dropout (green), deep ensemble (cyan). Set sizes are comparable only at matched realized coverage, which holds approximately between the single GIN and the ensemble, but not for MC dropout on HIA or for the RF (Table 4).</sub>
+<sub><strong>Figure 4.</strong> Left: mean prediction-set size at a nominal 90% target, with a single-label reference. Center: empirical test coverage, with the nominal 0.90 target shown as a dashed line. Right: accuracy on the 70% most confident test records. RF (grey), single GIN (yellow), MC dropout (green), deep ensemble (cyan). Set size should be compared at similar empirical coverage; smaller sets do not by themselves indicate better uncertainty. Ensemble temperature fitting reuses calibration labels, and molecule-level score exchangeability is not established for this protocol.</sub>
 
 ### 4.5 Sequential go/no-go campaign with the learned oracle
 
 In this retrospective run the SPRT returns GO on three of the four classification endpoints
 (BBB, AMES, hERG) and uses 150 measurements in total (Table 5, Figure 5). The comparison with
-a fixed design needs care. A one-sided fixed-sample test at the same nominal error rates needs 68.7
-measurements, which only the BBB and AMES subgroups can supply. On those two endpoints the
-SPRT used 105 measurements against 137.4 (24% fewer), and the saving comes entirely from AMES
+a fixed design needs care. A one-sided fixed-sample test at the same nominal error rates has
+an analytic requirement of approximately 68.7 observations, which only the BBB and AMES
+subgroups can supply. On those two endpoints the
+SPRT used 105 measurements against the continuous approximation of 137.4 (23.6% fewer), and the saving comes entirely from AMES
 (20 versus 68.7; observed shift 0.64 standard deviations). BBB, whose shift (0.25) lies below
 the design effect of 0.30, needed 85 measurements before crossing the GO boundary, 16 more
 than the fixed design. hERG reached GO after 14 of its 45 subgroup molecules (shift 0.59).
-HIA's subgroup has only 31 molecules, and its shift (0.28) never crossed either boundary, so
-the test ended undecided when the subgroup ran out. Capping the fixed design at the subgroup
+HIA's subgroup has only 31 records and cannot reach either boundary under any ordering of
+its 30 positive and one negative labels. Even 31 positive measurements could accumulate at
+most a log likelihood ratio of 2.082, below the GO boundary of 2.773; the single negative is
+also insufficient for NO-GO (Appendix A.4). Its undecided outcome is a structural budget
+limitation of this test. Capping the fixed design at the subgroup
 size gives a total of 213.4 and a 29.7% saving, but the capped hERG and HIA designs have less
 than the nominal power, so that figure isn't a same-error-rate comparison.
 
 A GO means that, in this measurement order, the working-model likelihood ratio crossed the
-boundary favoring a 0.30 s.d. shift over no shift. It is evidence that the ensemble's
-top-ranked 30% is enriched for positives relative to the test pool, consistent with the
-ranking ability in §4.3, and it validates no particular chemistry; BBB reached GO with an
+boundary favoring a 0.30 s.d. shift over no shift. The observed subgroup means describe
+positive-class enrichment, but a GO does not establish a minimum true effect or validate
+the oracle's ranking statistically under this retrospective protocol. Positive hERG and
+AMES labels denote channel blockers and mutagens, respectively, so positive-class enrichment
+does not mean a favorable drug-development outcome. BBB reached GO with an
 observed shift below the design effect. The procedure also looks ahead: labels are
 standardized with the test pool's mean and standard deviation, and the direction is chosen
 from the whole subgroup's mean, both of which use labels a real campaign wouldn't yet have.
@@ -487,33 +534,34 @@ experiment ID, parameters, and the oracle's summary prediction.
 
 </div>
 
-<sub><strong>Table 5.</strong> Campaign outcome per endpoint. Shift is the subgroup's standardized label mean in pool standard deviations. The fixed-sample test at the same nominal error rates needs 68.7 measurements; for hERG and HIA it is capped at the subgroup size (marked *), which lowers its power below nominal, and the total uses the capped values.</sub>
+<sub><strong>Table 5.</strong> Campaign outcome per endpoint. Shift is the subgroup's standardized label mean in pool standard deviations. Fixed n is the continuous Gaussian sample-size approximation (68.7, or 69 for an integer design), not a measured stopping count. For hERG and HIA it is capped at subgroup size (*), reducing nominal power; the total uses those caps. HIA cannot cross either boundary within this subgroup. GO denotes a working-model boundary crossing for the assay's positive class.</sub>
 
 <br>
 
-<p align="center"><img src="figures/fig_campaign_efficiency.png" alt="Figure 5" width="700"></p>
+<p align="center"><img src="figures/fig_campaign_efficiency.png" alt="Retrospective measurement counts compared with analytic requirements and subgroup caps" width="700"></p>
 
-<sub><strong>Figure 5.</strong> Measurements to a decision per endpoint: SPRT driven by the deep-ensemble oracle (cyan circles) against the fixed-sample test at the same nominal error rates (grey squares; 68.7 measurements, capped at the subgroup size for hERG and HIA, where the capped design has less than nominal power). AMES and hERG reach GO well below the fixed design, BBB reaches GO above it, and HIA exhausts its 31-molecule subgroup undecided. Retrospective run with test-pool standardization (§4.5).</sub>
+<sub><strong>Figure 5.</strong> Measurements used in the retrospective campaign (cyan circles) and analytic fixed-sample requirements (filled grey squares). Open grey squares mark subgroup caps for hERG and HIA, which do not preserve nominal power. The feasible BBB-plus-AMES comparison is 105 used versus approximately 137.4 required; these are one replay's counts and an analytic budget. HIA exhausts its 31-record subgroup without a reachable decision boundary. Prediction-set and selective metrics do not govern stopping.</sub>
 
-### 4.6 Interpretability probe: attention against a descriptor rule
+### 4.6 Attention-score implementation diagnostic
 
-We tested whether graph-attention weights pick out atoms named by a transparent rule (aromatic
-or nitrogen atoms, a coarse proxy for the lipophilic-ring and basic-amine motifs associated
-with hERG binding and CNS penetration). In this run they don't. Node attention ranks atoms
-close to chance against the rule (AUROC 0.52 on hERG and 0.49 on BBB), and the top three attended atoms per
-molecule are barely richer or poorer in salient atoms than the molecule overall (enrichment +0.04 and
-−0.04), even though the attention network is predictive (test AUROC 0.77 and 0.76). The
-result has two readings that this probe can't separate: attention weights may not be
-faithful explanations (Jain and Wallace 2019), or the rule may be too coarse a target, since
-it marks 47% of hERG atoms and 44% of BBB atoms as salient. Whether attention can be an
-explanation depends on how it is tested (Wiegreffe and Pinter 2019); here we simply don't
-use it as one. The probe is a single unseeded run on one split, excludes molecules that are
-too small or uniformly labeled (§3.8), and has no confidence intervals, so "near chance"
-describes this run rather than a tested null.
+The saved incoming-attention sums are numerically constant (Figure 6). Across 3709 eligible
+hERG atoms, scores range from 0.999999855 to 1.000000130, with population s.d.
+$3.58\times10^{-8}$; across 8454 BBB atoms they range from 0.999999896 to 1.000000119,
+with population s.d. $3.33\times10^{-8}$. This matches the exact normalization identity
+$\sum_j\alpha_{ji}=1$ (Appendix A.3). Sorting these values orders floating-point residuals,
+so the original salience AUROC and top-three enrichment do not measure an informative
+attention ranking. We withdraw their interpretation as evidence for or against attention
+explanations. Seeding or confidence intervals would not repair a constant statistic.
 
-<p align="center"><img src="figures/fig_attention_probe.png" alt="Figure 6" width="700"></p>
+The separately trained GAT remains predictive on the complete test sets (AUROC 0.770 on
+hERG and 0.756 on BBB), but prediction accuracy does not validate an attribution. A future
+interpretability experiment would need a nondegenerate, explicitly justified score and
+suitable controls. The broader debate about attention explanations (Jain and Wallace 2019;
+Wiegreffe and Pinter 2019) cannot be resolved by this implementation diagnostic.
 
-<sub><strong>Figure 6.</strong> Attention probe on hERG and BBB. Left: GAT test AUROC (cyan) against the AUROC of final-layer node attention for the aromatic-or-nitrogen salience rule (yellow); the dashed line marks chance. Right: salient-atom enrichment among each molecule's three most-attended atoms relative to the molecule's base rate (zero means no enrichment).</sub>
+<p align="center"><img src="figures/fig_attention_probe.png" alt="Incoming-attention sums differ from one only by floating-point residuals; separate GAT predictive AUROC" width="700"></p>
+
+<sub><strong>Figure 6.</strong> Attention-score diagnostic. Left: saved incoming-attention sums minus one, scaled by 10⁻⁸, for eligible hERG atoms (yellow) and BBB atoms (cyan). Their spread is floating-point residual around a score that is constant in exact arithmetic; displayed s.d. describes these atom scores, not uncertainty across training seeds. Right: the GAT's predictive test AUROC (cyan) is a separate quantity. The diagnostic does not test whether attention explains predictions or recovers the descriptor rule.</sub>
 
 ### 4.7 Summary of results
 
@@ -522,7 +570,7 @@ ensemble's decision metrics on the fixed split.
 
 <div align="center">
 
-| endpoint | n | metric | RF | single-task | multi-task | multi−single | ens. ECE ↓ | coverage | set @ 90% ↓ | sel. acc. @ 70% ↑ |
+| endpoint | records | metric | RF | single-task | multi-task | multi−single | ens. ECE ↓ | coverage | set @ nominal 90% ↓ | sel. acc. @ 70% ↑ |
 |---|---|---|---|---|---|---|---|---|---|---|
 | BBB | 2030 | AUROC ↑ | 0.892 ± 0.022 | 0.815 ± 0.030 | 0.815 ± 0.046 | 0.000 | 0.085 | 0.906 | 1.299 | 0.866 |
 | AMES | 7278 | AUROC ↑ | 0.817 ± 0.040 | 0.761 ± 0.039 | 0.712 ± 0.055 | −0.049 | 0.055 | 0.883 | 1.309 | 0.830 |
@@ -533,29 +581,36 @@ ensemble's decision metrics on the fixed split.
 
 </div>
 
-<sub><strong>Table 6.</strong> Full-data accuracy (training fraction 1.0; mean ± sample s.d. over five scaffold-split seeds) and K = 5 ensemble decision metrics (fixed split, classification only). The multi−single column is the full-data difference; the fraction-resolved differences are in Table 1.</sub>
+<sub><strong>Table 6.</strong> Full-data accuracy (retained training-scaffold fraction 1.0; mean ± sample s.d. over five scaffold-split seeds) and K = 5 ensemble decision metrics (fixed split, classification only). The multi−single column is the full-data difference; the fraction-resolved differences are in Table 1.</sub>
 
 <br>
 
-Taken together: the RF is the most accurate model on every endpoint; sharing a graph encoder
-helps some small endpoints (clearly Caco2, partly HIA) and hurts the large ones; and a deep
-ensemble is the strongest graph-model uncertainty method on proper scoring rules and
-decision metrics on average, without being the best calibrated by ECE or uniformly best per
-endpoint.
+The RF has the best full-data accuracy on every endpoint. The multi-task training protocol
+performs better than single-task training on some endpoint-fraction combinations and worse
+on others, with unresolved exposure confounds. The ensemble has the best mean graph-model
+proper scores and AURC on the fixed classification split, while single GIN has lower mean
+ECE. These results support endpoint-specific comparisons rather than a general claim of
+better transfer, calibrated coverage, or sequential decision performance.
 
 ## 5. Reproducibility
 
-The study has two tiers. Tier 1 runs on CPU in minutes. The walkthrough notebook
-recomputes every table in this paper from the committed artifacts in `artifacts/`, and three
-scripts regenerate the figures and the campaign from the same artifacts:
+The study has two tiers. Tier 1 runs on CPU: the walkthrough reconstructs Tables 1, 2, and 6
+from per-seed records, reads stored uncertainty summaries for Tables 3 and 4, checks their
+test-probability metrics, and verifies campaign quantities from stored predictions and
+outcomes. Figure 6 audits the saved atom-score vectors. These operations reproduce reported
+summaries without independently reproducing training. Validation/member logits, temperatures,
+conformal thresholds, model checkpoints, and stable prediction-to-compound identifiers are
+not committed, so conformal sets and model fitting cannot be independently reconstructed
+from the committed test probabilities alone. CPU commands from the repository root are:
 
 ```bash
-pip install -r requirements.txt                               # pinned CPU environment
+pip install -r requirements.txt                             # declared CPU dependencies
+python preprint/dl_forward/build_notebook.py                 # notebook source -> .ipynb
 jupyter nbconvert --to notebook --execute --inplace \
     preprint/dl_forward/walkthrough_learned_representations_admet.ipynb
 python preprint/dl_forward/figures.py                         # Figures 1-6
 python preprint/dl_forward/architecture_figure_v2.py          # Figure 0
-python preprint/dl_forward/e8_campaign_learned.py             # Table 5 + DuckDB lineage
+PYTHONPATH=.:src python preprint/dl_forward/e8_campaign_learned.py # campaign replay + lineage
 PYTHONPATH=.:src python preprint/dl_forward/scaffold_overlap.py   # Appendix A.10 (fetches TDC data)
 ```
 
@@ -566,13 +621,16 @@ run, with `PYTHONPATH=.:src`:
 python preprint/dl_forward/train_multitask_gnn.py           # data for Table 1, Figure 1
 python preprint/dl_forward/pretrain_ablation.py --full      # data for Table 2, Figure 2
 python preprint/dl_forward/make_ensemble_uncertainty.py     # data for Tables 3-4, Figures 3-4
-python preprint/dl_forward/attention_attribution.py         # data for Figure 6
+python preprint/dl_forward/attention_attribution.py         # legacy scorer diagnostic, not attribution validity
 ```
 
 For the transfer, pretraining, and ensemble scripts, seeds pin NumPy and PyTorch,
 and `cudnn.deterministic` is set, but residual GPU nondeterminism remains, so we report
 dispersion over seeds rather than expecting bitwise reproduction. The attention probe's
-training isn't seeded. The interpreter is pinned to Python 3.11.2 and the data loader to PyTDC 1.1.15.
+training isn't seeded. The repository specifies Python 3.11.2 and PyTDC 1.1.15; several other
+dependencies use version ranges rather than a complete lockfile. The artifact-only notebook
+for this revision was executed with Python 3.11.14. GPU scripts were not rerun in this
+editorial pass, and their public-layout training path was not validated end to end.
 The DuckDB lineage store is regenerated by the campaign script rather than committed;
 `artifacts/campaign_learned.json` records its path and the per-endpoint experiment IDs.
 
@@ -580,67 +638,79 @@ The DuckDB lineage store is regenerated by the campaign script rather than commi
 
 - **Retrospective, public data.** Every result is a simulation over public TDC benchmarks; no
   wet-lab loop is closed and no prospective claim is made.
-- **Transfer is endpoint-specific and possibly optimistic.** Multi-task benefits are clear for
-  Caco2, partial for HIA, and within seed variability for hERG, and the shared trunk hurts
-  AMES, Solubility, and BBB at some fractions. Splits are drawn per endpoint, so the
+- **Training protocols are confounded.** Multi-task performance is better on Caco2 and some
+  HIA conditions, and worse on AMES, Solubility, and BBB at some scaffold fractions. Smaller
+  task loaders repeat in multi-task training, so target-label exposure and total optimization
+  differ from single-task training. Splits are drawn per endpoint, so the
   multi-task trunk and the pretraining corpus see other endpoints' molecules that overlap the
   target's test set (1-4% of test molecules verbatim at f = 0.10, 10-23% at full data;
-  Appendix A.10); a globally scaffold-disjoint split would be needed to remove this. Five
+  Appendix A.10). Globally scaffold-disjoint splits and matched target-task update budgets
+  would address distinct confounds. The six endpoints do not establish a causal effect of
+  dataset size. Five
   seeds give low power for single cells, and we don't correct the 24 transfer comparisons for
   multiplicity.
 - **One split for the uncertainty study and campaign.** Tables 3-5 come from a single
   scaffold split with no seed-level dispersion, and the hERG and HIA test sets have only 153
   and 106 molecules.
-- **Ensemble calibration.** Members are calibrated before averaging, which is likely why the
-  ensemble's ECE is worse than a single calibrated network's. The ensemble is built from
-  single-task members; a multi-task ensemble wasn't evaluated.
+- **Scaffold fractions are not label fractions.** Large scaffold groups produce unequal
+  retained record fractions across seeds and endpoints. Training curves do not establish
+  label efficiency at matched annotation or compute budgets.
+- **Ensemble calibration.** Members are temperature-scaled before averaging; this is a
+  plausible contributor to calibration differences, not an established cause of the
+  ensemble's higher ECE. The ensemble uses single-task members; a multi-task ensemble and
+  calibration after averaging weren't evaluated.
 - **Baselines and featurization.** The MC dropout baseline isn't temperature-scaled, and its
   training-mode passes also activate DropEdge and batch-statistics normalization, which may
   understate what a carefully tuned dropout baseline achieves. Atomic number enters the graph
   encoder as a scalar rather than a one-hot vector, and the GIN ignores bond attributes, a
   simpler featurization than common practice.
-- **Conformal coverage is measured, not guaranteed.** Scaffold shift breaks the
-  exchangeability that split-conformal coverage requires, and coverage falls to 0.830 on
-  hERG. Shift-aware conformal methods (Tibshirani et al. 2019)
-  weren't applied.
+- **Conformal coverage is empirical.** Ensemble member-temperature fitting reuses the
+  conformal-calibration labels without an established fixed-score rank argument. A single
+  binary network's temperature preserves the exact sets, as explained in Appendix A.5.
+  The group-based split also does not establish
+  individual-score exchangeability. Coverage falls to 0.830 on hERG, but this run does not
+  identify the cause of undercoverage. Weighted conformal methods (Tibshirani et al. 2019)
+  require appropriate covariate-shift assumptions and weights; they weren't applied.
 - **The campaign is retrospective.** Labels are standardized with the test pool's mean and
   standard deviation and the direction is chosen from the whole subgroup's mean, so the
   stopping counts aren't those of an implementable sequential design. The SPRT treats
   standardized binary labels as Gaussian, samples without replacement from a finite
   subgroup, and reports one random measurement order, so its error rates are nominal. The
-  fixed-sample comparator at the same nominal error rates is feasible only for BBB and AMES. A GO is
-  evidence of the oracle's ranking, not a discovery.
-- **The attention probe** is one unseeded run with a coarse rule, two endpoints, one split,
-  and no confidence intervals, and it can't distinguish unfaithful attention from an
-  uninformative rule. The companion engine's
-  abductive rule discovery wasn't re-run with the learned oracle.
+  fixed-sample requirement is feasible only for BBB and AMES; caps do not preserve power,
+  and HIA's subgroup cannot reach either SPRT boundary. No same-pool alternative-oracle
+  campaigns were evaluated, so the replay does not establish a decision advantage caused
+  by ensemble uncertainty. GO is a working-model boundary crossing for an assay class.
+- **The attention statistic is degenerate.** Its normalized incoming sum is constant in
+  exact arithmetic. The original salience ranking is withdrawn; a valid attribution
+  experiment would require a different, justified statistic. GAT predictive AUROC is from
+  one unseeded run. The companion engine's abductive discovery wasn't re-run here.
+- **Artifact provenance is incomplete.** Test probabilities support independent checks of
+  several metrics, but missing validation/member outputs, fitted temperatures, thresholds,
+  checkpoints, and stable compound identifiers limit reconstruction of the complete pipeline.
 - Uncertainty-driven label acquisition is out of scope and left to future work.
 
 ## 7. Conclusion
 
-Replacing a descriptor oracle with learned graph models changes less than one might hope
-about accuracy and more than one might expect about where the gains sit. A strong random
-forest on descriptors and fingerprints remains the most accurate model on every endpoint
-studied. A shared graph encoder helps the smallest endpoints, most clearly Caco2 and HIA, and
-costs accuracy on the largest; its value depends on the endpoint, not on a general low-data
-advantage, and because per-endpoint splits let the shared trunk see some of each target's
-test structures, the measured gains may be optimistic. A five-member deep ensemble is the strongest graph-model uncertainty method on
-proper scoring rules, risk-coverage, and conformal set size, but it isn't the best
-calibrated by ECE, a gap that calibrating after averaging should close. Driving an existing
-sequential decision engine in a retrospective run, the ensemble reaches traceable go/no-go
-calls, and where a fixed design at the same nominal error rates is feasible it needs fewer
-measurements, with
-the saving concentrated where its top-ranked subgroup is strongly enriched. The practical message is to keep the descriptor baseline in the loop, use
-learned representations where transfer demonstrably helps, and judge uncertainty methods by
-the decisions they support, with coverage reported alongside every set size.
+A descriptor-and-fingerprint random forest has the best full-data accuracy on all six
+endpoints. Multi-task GIN has lower error than single-task GIN in some conditions, especially
+Caco2, but auxiliary structural exposure and repeated target-task updates prevent attribution
+to parameter sharing alone. On the fixed classification split, a five-member single-task
+ensemble improves mean proper scores and AURC relative to the other graph methods, while
+its ECE is higher. Prediction-set coverage remains an empirical outcome of a construction
+that reuses calibration labels. The probability-ranked campaign demonstrates a traceable
+retrospective replay; it does not validate prospective stopping error rates or a benefit
+caused by calibrated uncertainty. The attention-score audit shows why normalization must be
+checked before a ranking is interpreted as an attribution. These results motivate retaining
+strong conventional baselines and matching structural, label, and optimization exposure in
+future comparisons of learned molecular representations.
 
 ## Generative AI Disclosure
 
-Some assertions and model development steps within this document were developed with
-reference to Generative AI tools (Copilot; 2026 version). AI assistance was used for
-clarifying concepts, validating code logic, identifying potential errors, and generating
-some code segments. All AI-generated material was independently reviewed, debugged, and
-validated for correctness before inclusion.
+Generative AI tools, including GitHub Copilot and OpenAI Codex, assisted with code
+development, editorial revision, and checks of mathematical and computational consistency.
+The author retains responsibility for the manuscript, code, interpretations, and disclosed
+limitations. Artifact checks are distinguished from model retraining in §5; identified
+implementation problems are reported rather than treated as validated scientific findings.
 
 ## References
 
@@ -683,7 +753,7 @@ validated for correctness before inclusion.
 19. Jain, S. and Wallace, B. C. (2019). Attention is not explanation. *NAACL-HLT*.
 20. Russell, D. R. (2026). Knowing what to measure and when to stop: an autonomous decision
     engine for molecular property discovery. Preprint, SNPTX.
-    https://github.com/snptx1/snptx-repro-discovery
+    [Manuscript and reproducibility repository](https://github.com/snptx1/snptx-repro-discovery/blob/main/preprint/MANUSCRIPT_calibrated_sequential_discovery.md).
 21. Yang, K., Swanson, K., Jin, W., Coley, C., Eiden, P., Gao, H., Guzman-Perez, A.,
     Hopper, T., Kelley, B., Mathea, M., Palmer, A., Settels, V., Jaakkola, T., Jensen, K.
     and Barzilay, R. (2019). Analyzing learned molecular representations for property
@@ -702,20 +772,44 @@ validated for correctness before inclusion.
     *arXiv:2101.05397*.
 27. Rahaman, R. and Thiery, A. H. (2021). Uncertainty quantification and deep ensembles.
     *NeurIPS*.
-28. Tibshirani, R. J., Foygel Barber, R., Candès, E. and Ramdas, A. (2019). Conformal
+28. Tibshirani, R. J., Foygel Barber, R., Candès, E. J. and Ramdas, A. (2019). Conformal
     prediction under covariate shift. *NeurIPS*.
 29. Wiegreffe, S. and Pinter, Y. (2019). Attention is not not explanation. *EMNLP-IJCNLP*.
 30. Rogers, D. and Hahn, M. (2010). Extended-connectivity fingerprints. *Journal of
     Chemical Information and Modeling*, 50(5), 742-754.
 31. Holm, S. (1979). A simple sequentially rejective multiple test procedure.
     *Scandinavian Journal of Statistics*, 6(2), 65-70.
+32. Martins, I. F., Teixeira, A. L., Pinheiro, L. and Falcao, A. O. (2012). A Bayesian
+    approach to in silico blood-brain barrier penetration modeling. *Journal of Chemical
+    Information and Modeling*, 52(6), 1686-1697. [doi:10.1021/ci300124c](https://doi.org/10.1021/ci300124c).
+33. Xu, C., Cheng, F., Chen, L., Du, Z., Li, W., Liu, G., Lee, P. W. and Tang, Y. (2012).
+    In silico prediction of chemical Ames mutagenicity. *Journal of Chemical Information and
+    Modeling*, 52(11), 2840-2847. [doi:10.1021/ci300400a](https://doi.org/10.1021/ci300400a).
+34. Wang, S., Sun, H., Liu, H., Li, D., Li, Y. and Hou, T. (2016a). ADMET evaluation in
+    drug discovery. 16. Predicting hERG blockers by combining multiple pharmacophores and
+    machine learning approaches. *Molecular Pharmaceutics*, 13(8), 2855-2866.
+    [doi:10.1021/acs.molpharmaceut.6b00471](https://doi.org/10.1021/acs.molpharmaceut.6b00471).
+35. Hou, T., Wang, J., Zhang, W. and Xu, X. (2007). ADME evaluation in drug discovery.
+    7. Prediction of oral absorption by correlation and classification. *Journal of Chemical
+    Information and Modeling*, 47(1), 208-218. [doi:10.1021/ci600343x](https://doi.org/10.1021/ci600343x).
+36. Sorkun, M. C., Khetan, A. and Er, S. (2019). AqSolDB, a curated reference set of
+    aqueous solubility and 2D descriptors for a diverse set of compounds. *Scientific Data*,
+    6, 143. [doi:10.1038/s41597-019-0151-1](https://doi.org/10.1038/s41597-019-0151-1).
+37. Wang, N.-N., Dong, J., Deng, Y.-H., Zhu, M.-F., Wen, M., Yao, Z.-J., Lu, A.-P.,
+    Wang, J.-B. and Cao, D.-S. (2016b). ADME properties evaluation in drug discovery:
+    Prediction of Caco-2 cell permeability using a combination of NSGA-II and Boosting.
+    *Journal of Chemical Information and Modeling*, 56(4), 763-773.
+    [doi:10.1021/acs.jcim.5b00642](https://doi.org/10.1021/acs.jcim.5b00642).
+38. PyTorch Geometric contributors (2026). GATConv documentation, version 2.7.0.
+    [Layer implementation](https://pytorch-geometric.readthedocs.io/en/2.7.0/_modules/torch_geometric/nn/conv/gat_conv.html).
+    Accessed 5 October 2026.
 
 ---
 
 # Appendix A. Methods and derivations
 
 This appendix makes the study self-contained. A.1-A.3 cover the multi-task objective, the
-ensemble's uncertainty decomposition, and the attention probe; A.4-A.7 give the
+ensemble's entropy decomposition, and the attention-score diagnostic; A.4-A.7 give the
 decision-layer definitions the results rely on; A.8 the pretraining objective; A.9 the
 implementation settings; and A.10 the cross-endpoint exposure of the multi-task trunk.
 
@@ -732,11 +826,14 @@ $$
 \mathcal{L}(\theta) = \sum_{t} w_t \, \mathbb{E}_{(x,y)\sim \mathcal{D}_t}\big[\ell_t(h_t(\phi_\theta(x)), y)\big],
 $$
 
-with $w_t = 1$, optimized by round-robin task-batch updates so that the trunk isn't dominated
-by the largest endpoint. When $|\mathcal{D}_t|$ is small, a single-task estimate of the trunk
-is high-variance, and gradients from the other endpoints act as a regularizer; when tasks
-conflict or an endpoint has ample data, sharing capacity can cost accuracy. Both effects
-appear in Table 1.
+with $w_t = 1$, optimized by alternating task-batch updates. For batch size $b$, let
+$L_t = \lceil |\mathcal{D}_t|/b \rceil$ and $L_{\max}=\max_t L_t$. Each multi-task epoch
+uses $L_{\max}$ batches from every task, restarting shorter loaders, whereas a single-task
+epoch uses $L_t$ batches. Over $E$ epochs, target-task update counts are therefore
+$E L_{\max}$ and $E L_t$, respectively; the shared trunk receives $E T L_{\max}$ total
+updates for $T$ tasks. The mean-loss objective does not itself match optimization exposure.
+Regularization through shared representations is one possible mechanism, but Table 1 cannot
+separate it from repeated target-task training and auxiliary structural exposure.
 
 ## A.2 Deep-ensemble uncertainty decomposition
 
@@ -747,30 +844,47 @@ decomposes as
 $$
 \underbrace{\mathcal{H}[\bar p]}_{\text{total}}
   \;=\;
-\underbrace{\tfrac1K\textstyle\sum_k \mathcal{H}[p^{(k)}]}_{\text{aleatoric}}
+\underbrace{\tfrac1K\textstyle\sum_k \mathcal{H}[p^{(k)}]}_{\text{mean member entropy}}
   \;+\;
-\underbrace{\mathcal{H}[\bar p]-\tfrac1K\textstyle\sum_k \mathcal{H}[p^{(k)}]}_{\text{epistemic (mutual information)}},
+\underbrace{\mathcal{H}[\bar p]-\tfrac1K\textstyle\sum_k \mathcal{H}[p^{(k)}]}_{\text{member disagreement (mutual information)}},
 $$
 
-where the epistemic term is the mutual information between the label and the member index.
-It is non-negative by concavity of entropy and vanishes when all members agree. The
+where the last term is $I(Y;M\mid x)$ for a uniformly sampled empirical member index $M$
+and label $Y$ drawn from that member's distribution. It is non-negative by concavity of
+entropy and vanishes when all members agree. Mean member entropy and disagreement are often
+used as proxies for aleatoric and epistemic uncertainty, but these finite, temperature-scaled
+members are not demonstrated posterior samples and the identity does not identify true
+irreducible noise or parameter uncertainty. The
 decision metrics in this paper don't use the decomposition directly: conformal scores use
 $1-\bar p(y\mid x)$ and selective prediction ranks by $\max_y \bar p(y\mid x)$. Member
 disagreement enters those scores implicitly, because averaging disagreeing members flattens
 $\bar p$. Testing the mutual information directly as an abstention score is left to future
 work.
 
-## A.3 Attention attribution
+## A.3 Normalization of the attention score
 
-For the GAT, let $\alpha^{(L)}_{ji}$ be the attention coefficient from atom $j$ to atom $i$
-in the final layer, which has a single head (the first two layers have four). The score of
-atom $i$ is the incoming attention $a_i = \sum_{j \in \mathcal{N}(i)} \alpha^{(L)}_{ji}$. The
-rule labels atom $i$ salient if it is aromatic or a nitrogen. Test molecules with fewer than
-four atoms, or with all atoms salient or all non-salient, are excluded (5 of 153 on hERG, 88
-of 458 on BBB). Over the remaining molecules we pool atoms and report the AUROC of $a_i$ for
-predicting salience, and for each molecule the fraction of salient atoms among its three
-highest-scoring atoms minus the molecule's salient fraction, averaged over molecules. An AUROC of 0.5 and an enrichment of 0 mean
-attention carries no information about the rule.
+For the GAT, let $e_{ji}$ be the final-layer attention logit from source atom $j$ to
+destination $i$. PyTorch Geometric normalizes over incoming neighbors, including a self-loop
+(PyTorch Geometric contributors 2026):
+
+$$
+\alpha_{ji} = \frac{\exp(e_{ji})}{\sum_{u\in\mathcal{N}(i)\cup\{i\}}\exp(e_{ui})},
+\qquad a_i = \sum_{j\in\mathcal{N}(i)\cup\{i\}}\alpha_{ji} = 1.
+$$
+
+`node_attention()` in `attention_attribution.py` sets the model to evaluation mode, then
+sums the returned coefficients by destination. Attention dropout is inactive, so this
+normalization identity applies. The final layer has one head; averaging heads would leave
+the same constant-sum problem. The original aromatic-or-nitrogen eligibility filter excludes
+5 of 153 hERG and 88 of 458 BBB test records. Across the remaining atoms, numerical scores
+differ from one by at most $1.46\times10^{-7}$ on hERG and $1.20\times10^{-7}$ on BBB.
+
+The legacy artifact stores salience AUROCs of 0.521 and 0.488 and top-three enrichments of
++0.038 and −0.037. Those values reproduce a ranking of floating-point residuals, not a
+nonconstant attention statistic; they are retained only as historical records and withdrawn
+as interpretability evidence. Figure 6 instead displays the score residuals and the separate
+GAT prediction result. Changing to an outgoing sum would require justification and controls,
+not merely a change of indexing.
 
 ## A.4 Sequential probability ratio test (SPRT)
 
@@ -792,7 +906,8 @@ $$
 A = \log\frac{1-\beta}{\alpha}, \qquad B = \log\frac{\beta}{1-\alpha},
 $$
 
-and $(\alpha,\beta) = (0.05, 0.20)$. Wald's inequalities bound the realized error rates by
+and $(\alpha,\beta) = (0.05, 0.20)$. Under the specified independent Gaussian sampling model,
+Wald's inequalities bound error probabilities by
 $\alpha' \le \alpha/(1-\beta) = 0.0625$ and $\beta' \le \beta/(1-\alpha) \approx 0.21$. The
 comparator is the one-sided fixed-sample $z$-test with the same nominal error rates, which needs
 
@@ -801,17 +916,28 @@ n_{\text{fixed}} = \left(\frac{z_{1-\alpha}+z_{1-\beta}}{\theta_1-\theta_0}\righ
 = \left(\frac{1.645 + 0.842}{0.30}\right)^2 \approx 68.7
 $$
 
-measurements. Only the BBB and AMES subgroups are large enough for this design; for hERG and
+as a continuous approximation, requiring 69 observations for an integer design. Only the
+BBB and AMES subgroups are large enough for this design; for hERG and
 HIA we cap it at the subgroup size (45 and 31), which gives those capped designs less than
-the nominal power. When the true shift is at or above $\theta_1$, the SPRT's expected sample size is well below
-$n_{\text{fixed}}$; when it lies between $\theta_0$ and $\theta_1$, the test can run longer than
-the fixed design, as on BBB.
+the nominal power. Sequential stopping can reduce expected sample size under the specified
+model, but the realized count can exceed the fixed budget, as on BBB. The replay does not
+estimate expected sample size or demonstrate equal realized error rates.
+
+HIA illustrates a feasibility constraint. Its test pool has 93 positive and 13 negative
+labels. With the implementation's population standard deviation, a standardized positive
+label is $\sqrt{13/93}=0.373878$, giving an increment
+$0.30(0.373878-0.15)=0.0671635$. Even 31 positives yield only
+$31(0.0671635)=2.0821<A=\log16=2.7726$. The actual subgroup has 30 positives and one negative;
+the negative increment is approximately −0.8474, above $B=\log(0.20/0.95)=-1.5581$.
+Positives increase the ratio, so neither boundary is reachable in any ordering of that
+subgroup. This is an analytic property of the stored pool and budget, not a Monte Carlo result.
 
 Four departures from the textbook setting matter. First, the measurements are standardized
 with the mean and standard deviation of the whole test pool, which a real campaign wouldn't
 know in advance. Second, the implementation chooses the test direction from the sign of the
-whole subgroup's mean, which also looks ahead; under the working model a data-chosen
-direction would loosen the per-direction bound of 0.0625 to at most 0.125 by a union bound.
+whole subgroup's mean, which also looks ahead. If two fixed-direction tests each satisfied
+the ideal-model bound of 0.0625, a union bound would give at most 0.125 for testing either
+direction; that conditional calculation is not a bound for this finite-pool replay.
 Here the chosen direction was positive on all four endpoints, the direction one would
 pre-specify for a subgroup ranked by probability of the positive class, so the decisions
 equal those of a one-sided test. Third, the measurements are standardized binary labels,
@@ -823,30 +949,56 @@ counts of one retrospective run, not validated error rates.
 
 ## A.5 Split-conformal prediction and coverage
 
-On a calibration set of size $n$ we compute scores $s_i = 1 - \hat p(y_i \mid x_i)$ and take
+For a score function fitted independently of calibration labels, let
+$s_i = 1 - \hat p(y_i \mid x_i)$ on a calibration set of size $n$ and
+$k=\lceil(1-\alpha)(n+1)\rceil$. The exact construction takes
 
 $$
-\hat q = \text{the } \big\lceil (1-\alpha)(n+1) \big\rceil / n \text{ empirical quantile of } \{s_i\}_{i=1}^{n},
+\hat q = s_{(k)} \quad (k\le n), \qquad \hat q=+\infty \quad (k>n),
 $$
 
-with prediction set $C(x) = \{\,y : 1-\hat p(y\mid x) \le \hat q\,\}$. If calibration and test
-points are exchangeable, then
+where $s_{(k)}$ is the $k$-th ordered score. With prediction set
+$C(x) = \{\,y : 1-\hat p(y\mid x) \le \hat q\,\}$ and exchangeable calibration and test
+scores, the rank argument gives
 
 $$
 \Pr\big(y_{\text{test}} \in C(x_{\text{test}})\big) \;\ge\; 1-\alpha,
 $$
 
 marginally over the draw of calibration and test data (Vovk et al. 2005; Angelopoulos and
-Bates 2023); here $\alpha = 0.10$. Because validity holds by construction under
-exchangeability, efficiency, the mean set size $\mathbb{E}\,|C(x)|$, is the informative
-comparison, but only between methods at the same realized coverage. In this study scaffolds
-are assigned to validation and test at random, so the two sets are exchangeable at the level
-of scaffold groups. The guarantee, however, is stated for exchangeable individual molecules,
-and molecules within a scaffold are correlated, so realized coverage can depart from nominal,
-as it does on hERG (0.830). The implementation computes $\hat q$ with NumPy's linear
+Bates 2023); here $\alpha = 0.10$. Marginal validity does not require every finite test
+realization to reach the target. Efficiency, the mean set size $\mathbb{E}\,|C(x)|$, should
+be compared alongside empirical coverage.
+
+This study randomly allocates whole scaffold groups to partitions; that assignment does not
+establish molecule-level score exchangeability. Dependence within a group is not, by itself,
+proof of nonexchangeability, but the individual-score rank condition needs justification for
+this sampling design. Independently, the ensemble's member temperatures are fitted using the
+same labels that calibrate its sets. Averaging differently transformed member probabilities
+is not a common monotone transformation of a fixed score, so the ordinary rank argument is
+not established for this ensemble. The reported hERG coverage of 0.830 is empirical; this experiment
+does not isolate the cause of its shortfall.
+
+Label reuse alone need not invalidate a single binary network's sets. If its original
+true-label score is $s=1-p(y\mid x)$, scalar temperature scaling gives the same strictly
+increasing transformation to every score,
+
+$$
+g_T(s)=\frac{s^{1/T}}{s^{1/T}+(1-s)^{1/T}}, \qquad T>0.
+$$
+
+Thus $g_T(s_{\mathrm{test}})\le g_T(s_{(k)})$ if and only if
+$s_{\mathrm{test}}\le s_{(k)}$: exact order-statistic sets are temperature-invariant even
+when $T$ is data-fitted. The interpolated implementation contains those exact sets for
+$k\le n$. This preserves the rank-based lower coverage bound under hypothetical
+individual-score exchangeability for the single binary network; it does not establish that
+exchangeability for this group-based split or extend to the differently scaled ensemble.
+
+The implementation computes $\hat q$ with NumPy's linear
 interpolation at level $\lceil (1-\alpha)(n+1) \rceil / n$, which returns a value at or above
 the exact order statistic, so its sets contain the exact construction's sets and the
-guarantee still holds, slightly conservatively, under exchangeability whenever
+interpolation itself preserves the rank guarantee whenever the score-fitting and
+exchangeability conditions above hold and
 $k = \lceil (1-\alpha)(n+1) \rceil \le n$, which is true of every calibration set here. (For
 $k > n$ the exact construction returns every label, whereas the code caps the level at 1.)
 
@@ -865,10 +1017,10 @@ the mean confidence in bin $b$. NLL is $-\frac1N\sum_i \log \hat p(y_i\mid x_i)$
 score is $\frac1N\sum_i (\hat p(y{=}1\mid x_i) - y_i)^2$. Temperature scaling (Guo et al. 2017)
 fits one scalar $T>0$ on the validation set to minimize the NLL of
 $\mathrm{softmax}(z/T)$; it rescales confidence without changing the predicted class. Each
-ensemble member is scaled before averaging. Averaging calibrated members flattens the
-ensemble's probabilities and tends to make it underconfident (Rahaman and Thiery 2021; Wu
-and Gales 2021), which is consistent with the ensemble's higher ECE in Table 3. ECE with ten
-bins is also noisy on test sets of 106 to 864 molecules.
+ensemble member is scaled before averaging. Averaging individually calibrated members can
+produce underconfidence (Rahaman and Thiery 2021; Wu and Gales 2021), but the unsigned ECE
+in Table 3 does not diagnose the direction or cause of this ensemble's miscalibration.
+ECE with ten bins is also noisy on test sets of 106 to 864 records.
 
 ## A.7 Selective prediction and risk-coverage
 
@@ -884,33 +1036,40 @@ with 0-1 loss $\ell$ (El-Yaniv and Wiener 2010; Geifman and El-Yaniv 2017). We u
 $g(x) = \max_y \hat p(y\mid x)$ for every method. Sweeping $\tau$ traces the risk-coverage
 curve; AURC is the mean selective risk over all coverage levels $k/N$, $k = 1,\dots,N$, and
 selective accuracy at 70% is the accuracy on the $\lfloor 0.7N \rceil$ most confident test
-molecules. On imbalanced endpoints selective accuracy should be read against the majority
-rate (BBB 0.83 and HIA 0.88 positive in the test set).
+molecules. Selective accuracy should be read against class composition in the retained
+subset, not just the full-pool majority rate. HIA RF retains 73 positive labels among 74
+records and predicts 73 correctly; an always-positive predictor has the same accuracy on
+that subset. Different methods retain different subsets, so their accuracies do not compare
+identical samples. AURC reflects both predictive error and the ordering of confidence.
 
 ## A.8 Self-supervised attribute-mask pretraining
 
-The ablation of §4.2 pretrains the shared trunk with the attribute-masking objective of Hu et
-al. (2020). For each molecule we sample a masked atom set $M(x)$ at rate $\rho = 0.15$, zero
-those atoms' feature rows to give the corrupted graph $\tilde x$, and predict each masked
+The ablation of §4.2 adapts the node-level attribute-masking objective of Hu et al. (2020).
+For each molecule $x$, include each atom in $M(x)$ independently with probability
+$\rho = 0.15$, zero those atoms' feature rows to give the corrupted graph $\tilde x$, and predict each masked
 atom's element $z_i$ from its node embedding by cross-entropy over the corpus's
 atomic-number vocabulary $\mathcal{V}$:
 
 $$
-\mathcal{L}_{\text{mask}}(\theta) \;=\; -\,\mathbb{E}_{x}\,\frac{1}{|M(x)|}
-    \sum_{i \in M(x)} \log p_\theta\!\big(z_i \mid \tilde x\big),
+\mathcal{L}_{\text{mask},B}(\theta) \;=\;
+    -\frac{\sum_{x\in B}\sum_{i\in M(x)}\log p_\theta\!\big(z_i\mid\tilde x\big)}
+    {\sum_{x\in B}|M(x)|},
 \qquad z_i \in \mathcal{V}.
 $$
 
-The corpus is the union of all six endpoints' training molecules for each seed and fraction,
-without labels and without any endpoint's own validation or test scaffolds; as Appendix A.10
-shows, other endpoints' training molecules can still overlap a target's test set. The pretrained trunk is then fine-tuned under
+for minibatches $B$ containing at least one masked atom. A molecule can have no masked atoms;
+only an entirely unmasked batch is skipped. This weights molecules by their number of masked
+atoms, rather than giving each molecule equal weight. The corpus concatenates all six
+endpoints' training graph lists for each seed and scaffold fraction without labels or
+deduplication. Each endpoint contributes its own training partition, but other endpoints'
+graphs can overlap a target's validation or test structures (Appendix A.10). The pretrained trunk is then fine-tuned under
 the identical supervised protocol. Hu et al. found that node-level or graph-level
 pretraining alone gives limited improvement and can transfer negatively, and that combining
 the two works best; this ablation tests the node-level objective alone.
 
 ## A.9 Implementation and hyperparameters
 
-All graph models share the encoder and protocol below.
+The main GIN models use the settings below; the separate GAT diagnostic is listed last.
 
 <div align="center">
 
@@ -918,21 +1077,21 @@ All graph models share the encoder and protocol below.
 |---|---|---|
 | Encoder | backbone | GIN, sum pooling |
 | | hidden width / layers | 128 / 4 |
-| | normalization | BatchNorm in GIN MLPs; PairNorm (scale 1.0) between layers |
+| | normalization | BatchNorm in GIN MLPs and after convolutions; per-graph PairNorm (scale 1.0) between layers |
 | | dropout / DropEdge rate | 0.3 / 0.1 |
 | | atom features / bond attributes | 9 / computed but unused by GIN |
 | Optimization | optimizer | Adam, learning rate 5e-4, weight decay 5e-4 |
 | | epochs / batch size | 150 (fixed, no early stopping) / 128 |
-| | task weighting | round-robin task batches, $w_t = 1$ |
+| | task weighting | round-robin batches, $w_t = 1$; smaller task loaders restart |
 | | class imbalance | inverse-frequency class weights |
 | Descriptor baseline | features | 10 RDKit descriptors + 1024-bit Morgan (radius 2) |
 | | model | random forest, 300 trees, balanced class weights |
 | Evaluation | split | Murcko scaffold cold-split, scaffolds randomly assigned |
 | | test / validation scaffold fraction | 0.20 / 0.20 |
 | | seeds | 5 (0-4) for transfer and pretraining; split seed 0 for Tables 3-5 |
-| | training fractions | 0.10, 0.25, 0.50, 1.00 (whole-scaffold subsampling) |
+| | retained training-scaffold fractions | 0.10, 0.25, 0.50, 1.00 |
 | Ensemble | members $K$ | 5 single-task GINs, training seeds 0-4 |
-| | calibration | per-member temperature scaling on validation NLL |
+| | calibration | per-member temperature scaling on validation NLL; same labels reused for conformal |
 | | MC dropout baseline | 30 passes of member 0, not temperature-scaled |
 | Decision metrics | ECE bins | 10, equal width, top label |
 | | conformal score / target | $1-\hat p(y\mid x)$ / 90% ($\alpha = 0.10$) |
@@ -943,7 +1102,7 @@ All graph models share the encoder and protocol below.
 | | design effect $\theta_1$ | 0.30 pool s.d. |
 | | subgroup | top 30% by ensemble probability (minimum 8) |
 | | measurement order seed | 20260905 |
-| Attention probe | GAT | 3 layers, hidden 64, heads 4 / 4 / 1, checkpoint by validation AUROC, unseeded |
+| Attention diagnostic | GAT | 3 layers, hidden 64, heads 4 / 4 / 1, checkpoint by validation AUROC, unseeded |
 
 </div>
 
@@ -951,8 +1110,8 @@ All graph models share the encoder and protocol below.
 
 For the transfer, pretraining, and ensemble scripts, seeds pin NumPy and PyTorch,
 and `cudnn.deterministic` is set; residual GPU nondeterminism remains, so we report
-dispersion over seeds rather than bitwise reproduction. The interpreter is pinned to Python
-3.11.2 and PyTDC to 1.1.15.
+dispersion over seeds rather than bitwise reproduction. Repository version specifications
+and the environment used for this revision are described in §5.
 
 ## A.10 Cross-endpoint exposure of the multi-task trunk
 
